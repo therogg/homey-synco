@@ -1,0 +1,18 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Valve Position",
+    "de": "Ventilstellung"
+  },
+  "units": {
+    "en": "%",
+    "de": "%"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/valve.svg",
+  "min": 0,
+  "max": 100,
+  "step": 1
+}

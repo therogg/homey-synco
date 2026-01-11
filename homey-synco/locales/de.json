@@ -13,6 +13,21 @@
         "list_devices": {
           "title": "Räume auswählen"
         }
+      },
+      "settings": {
+        "poll_interval": {
+          "label": "Abfrageintervall (Sekunden)",
+          "hint": "Wie oft das Gateway abgefragt wird"
+        },
+        "setpoint_type": {
+          "label": "Sollwert-Modus",
+          "hint": "Welcher Sollwert beim Ändern der Zieltemperatur gesteuert wird",
+          "values": {
+            "comfort": "Komfort",
+            "precomfort": "Vorkomfort",
+            "economy": "Eco"
+          }
+        }
       }
     }
   },
@@ -29,8 +44,25 @@
       "title": "Räume auswählen"
     }
   },
+  "capabilities": {
+    "valve_position": {
+      "title": "Ventilstellung"
+    },
+    "thermostat_mode": {
+      "title": "Betriebsmodus",
+      "values": {
+        "auto": "Automatik",
+        "comfort": "Komfort",
+        "precomfort": "Vorkomfort",
+        "economy": "Eco",
+        "protection": "Schutz"
+      }
+    }
+  },
   "errors": {
     "connection_failed": "Verbindung fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.",
-    "no_rooms_found": "Keine Räume auf dem Gateway gefunden."
+    "no_rooms_found": "Keine Räume auf dem Gateway gefunden.",
+    "not_connected": "Nicht mit Gateway verbunden.",
+    "write_failed": "Schreiben des Wertes zum Gateway fehlgeschlagen."
   }
 }

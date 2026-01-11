@@ -13,6 +13,21 @@
         "list_devices": {
           "title": "Select Rooms"
         }
+      },
+      "settings": {
+        "poll_interval": {
+          "label": "Polling Interval (seconds)",
+          "hint": "How often to poll the gateway for updates"
+        },
+        "setpoint_type": {
+          "label": "Target Temperature Mode",
+          "hint": "Which setpoint to control when changing target temperature",
+          "values": {
+            "comfort": "Comfort",
+            "precomfort": "Pre-Comfort",
+            "economy": "Economy"
+          }
+        }
       }
     }
   },
@@ -29,8 +44,25 @@
       "title": "Select Rooms"
     }
   },
+  "capabilities": {
+    "valve_position": {
+      "title": "Valve Position"
+    },
+    "thermostat_mode": {
+      "title": "Operating Mode",
+      "values": {
+        "auto": "Automatic",
+        "comfort": "Comfort",
+        "precomfort": "Pre-Comfort",
+        "economy": "Economy",
+        "protection": "Protection"
+      }
+    }
+  },
   "errors": {
     "connection_failed": "Connection failed. Please check your credentials.",
-    "no_rooms_found": "No rooms found on the gateway."
+    "no_rooms_found": "No rooms found on the gateway.",
+    "not_connected": "Not connected to gateway.",
+    "write_failed": "Failed to write value to gateway."
   }
 }

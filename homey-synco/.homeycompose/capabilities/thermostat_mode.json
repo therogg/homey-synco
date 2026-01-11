@@ -1,0 +1,47 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Operating Mode",
+    "de": "Betriebsmodus"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "picker",
+  "values": [
+    {
+      "id": "auto",
+      "title": {
+        "en": "Automatic",
+        "de": "Automatik"
+      }
+    },
+    {
+      "id": "comfort",
+      "title": {
+        "en": "Comfort",
+        "de": "Komfort"
+      }
+    },
+    {
+      "id": "precomfort",
+      "title": {
+        "en": "Pre-Comfort",
+        "de": "Vorkomfort"
+      }
+    },
+    {
+      "id": "economy",
+      "title": {
+        "en": "Economy",
+        "de": "Eco"
+      }
+    },
+    {
+      "id": "protection",
+      "title": {
+        "en": "Protection",
+        "de": "Schutz"
+      }
+    }
+  ]
+}
