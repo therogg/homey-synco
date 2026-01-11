@@ -413,10 +413,14 @@ export class OZW772Client {
         params.EnumValue = enumValue;
       }
 
+      console.log('Writing datapoint:', id, 'Type:', type, 'Value:', value, 'EnumValue:', enumValue);
+
       const response = await this.request<WriteDatapointResponse>(
         API_ENDPOINTS.WRITE_DATAPOINT,
         params
       );
+
+      console.log('Write response:', JSON.stringify(response));
 
       return response.Result?.Success === 'true';
     });
@@ -428,7 +432,9 @@ export class OZW772Client {
    * @param value Numeric value
    */
   async writeNumeric(id: string, value: number): Promise<boolean> {
-    return this.writeDatapoint(id, DATA_TYPES.NUMERIC, value.toString());
+    // OZW772 API expects values with one decimal place (e.g., "22.0" not "22")
+    const formattedValue = value.toFixed(1);
+    return this.writeDatapoint(id, DATA_TYPES.NUMERIC, formattedValue);
   }
 
   /**
@@ -519,5 +525,19 @@ export class OZW772Client {
       useHttps: this.config.useHttps,
       port: this.config.port,
     };
+  }
+
+  /**
+   * Get datapoint description including min/max values and write permissions
+   * @param id Datapoint ID
+   */
+  async getDatapointDesc(id: string): Promise<Record<string, unknown>> {
+    return this.withSession(async (sessionId) => {
+      const response = await this.request<Record<string, unknown>>(
+        API_ENDPOINTS.DATAPOINT_DESC,
+        { SessionId: sessionId, Id: id }
+      );
+      return response;
+    });
   }
 }

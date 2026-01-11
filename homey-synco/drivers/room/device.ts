@@ -60,15 +60,12 @@ const MODE_DISPLAY_VALUES: Record<ThermostatMode, string> = {
   protection: 'Schutz',
 };
 
-const SETPOINT_OFFSETS: Record<string, number> = {
-  comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
-  precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
-  economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
-};
-
 /**
  * Room Device class for Synco Living room thermostats
  */
+/** Debounce delay for temperature changes in milliseconds */
+const TEMPERATURE_DEBOUNCE_MS = 2000;
+
 class RoomDevice extends Homey.Device {
   private client: OZW772Client | null = null;
   private pollInterval: NodeJS.Timeout | null = null;
@@ -77,6 +74,11 @@ class RoomDevice extends Homey.Device {
   private previousTemperature: number | null = null;
   private previousMode: string | null = null;
   private previousValvePosition: number | null = null;
+
+  /** Pending temperature value waiting to be sent */
+  private pendingTemperature: number | null = null;
+  /** Debounce timer for temperature changes */
+  private temperatureDebounceTimer: NodeJS.Timeout | null = null;
 
   /** Counter for consecutive poll failures */
   private consecutiveFailures: number = 0;
@@ -428,33 +430,73 @@ class RoomDevice extends Homey.Device {
   }
 
   /**
-   * Handle target temperature capability changes
+   * Handle target temperature capability changes with debouncing
+   * Caches the value and only sends to gateway after user stops changing
    * @param value - New target temperature value
-   * @throws {Error} When not connected or write fails
    */
   async onCapabilityTargetTemperature(value: number): Promise<void> {
-    if (!this.client) {
-      throw new Error('Not connected to gateway');
+    // Round value to 1 decimal place
+    const roundedValue = Math.round(value * 10) / 10;
+
+    this.log(`Temperature change requested: ${roundedValue}°C (debouncing...)`);
+
+    // Store the pending value
+    this.pendingTemperature = roundedValue;
+
+    // Clear existing timer
+    if (this.temperatureDebounceTimer) {
+      this.homey.clearTimeout(this.temperatureDebounceTimer);
     }
 
-    this.log(`Setting target temperature to ${value}`);
+    // Set new timer - will fire after user stops changing
+    this.temperatureDebounceTimer = this.homey.setTimeout(async () => {
+      await this.sendPendingTemperature();
+    }, TEMPERATURE_DEBOUNCE_MS);
+  }
 
+  /**
+   * Send the pending temperature to the gateway
+   * Called after debounce timer fires
+   */
+  private async sendPendingTemperature(): Promise<void> {
+    if (this.pendingTemperature === null) return;
+
+    const value = this.pendingTemperature;
+    this.pendingTemperature = null;
+    this.temperatureDebounceTimer = null;
+
+    if (!this.client) {
+      this.error('Cannot send temperature: not connected to gateway');
+      return;
+    }
+
+    // Get setpoint type from settings
     const settings = this.getSettings() as RoomSettings;
     const setpointType = settings.setpoint_type || 'comfort';
-    const offset = SETPOINT_OFFSETS[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
+
+    // Map setpoint type to offset
+    const setpointTypeToOffset: Record<string, number> = {
+      comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
+      precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
+      economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
+    };
+
+    const offset = setpointTypeToOffset[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
     const setpointId = this.getDatapointId(offset);
+
+    this.log(`Sending temperature ${value}°C to gateway (setpoint: ${setpointType}, datapoint: ${setpointId})`);
 
     try {
       const success = await this.client.writeNumeric(setpointId, value);
 
       if (!success) {
-        throw new Error('Failed to write temperature setpoint');
+        this.error('Gateway rejected temperature write');
+        return;
       }
 
-      this.log(`Temperature setpoint (${setpointType}) updated successfully`);
+      this.log(`Temperature setpoint updated successfully to ${value}°C`);
     } catch (error) {
-      this.error('Failed to set target temperature:', error);
-      throw error;
+      this.error('Failed to send temperature to gateway:', error);
     }
   }
 
@@ -493,6 +535,44 @@ class RoomDevice extends Homey.Device {
   }
 
   /**
+   * Update the target_temperature capability options based on setpoint type
+   * @param setpointType - The setpoint type (comfort, precomfort, economy)
+   */
+  private async updateTemperatureRange(setpointType: string): Promise<void> {
+    if (!this.client) return;
+
+    const setpointTypeToOffset: Record<string, number> = {
+      comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
+      precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
+      economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
+    };
+
+    const offset = setpointTypeToOffset[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
+    const setpointId = this.getDatapointId(offset);
+
+    try {
+      const desc = await this.client.getDatapointDesc(setpointId) as {
+        Description?: { Min?: string; Max?: string };
+      };
+
+      if (desc.Description?.Min && desc.Description?.Max) {
+        const min = parseFloat(desc.Description.Min);
+        const max = parseFloat(desc.Description.Max);
+
+        this.log(`Updating target_temperature range for ${setpointType}: min=${min}, max=${max}`);
+
+        await this.setCapabilityOptions('target_temperature', {
+          min,
+          max,
+          step: 0.5,
+        });
+      }
+    } catch (error) {
+      this.error('Failed to update temperature range:', error);
+    }
+  }
+
+  /**
    * Handle settings changes
    * @param options - Settings change options containing old/new settings and changed keys
    */
@@ -510,6 +590,12 @@ class RoomDevice extends Homey.Device {
       this.log(`Polling interval changed to ${newSettings.poll_interval} seconds`);
       this.startPolling();
     }
+
+    if (changedKeys.includes('setpoint_type')) {
+      const setpointType = newSettings.setpoint_type as string;
+      this.log(`Setpoint type changed to ${setpointType}`);
+      await this.updateTemperatureRange(setpointType);
+    }
   }
 
   /**
@@ -519,6 +605,11 @@ class RoomDevice extends Homey.Device {
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
       this.pollInterval = null;
+    }
+
+    if (this.temperatureDebounceTimer) {
+      this.homey.clearTimeout(this.temperatureDebounceTimer);
+      this.temperatureDebounceTimer = null;
     }
 
     this.client = null;
