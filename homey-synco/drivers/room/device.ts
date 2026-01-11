@@ -276,6 +276,8 @@ class RoomDevice extends Homey.Device {
       return;
     }
 
+    this.log('Polling data for room:', this.getName(), 'baseId:', this.roomBaseId);
+
     try {
       await this.client.ensureSession();
 
@@ -286,10 +288,14 @@ class RoomDevice extends Homey.Device {
         this.getDatapointId(DATAPOINT_OFFSETS.MODE_STATE),
       ];
 
+      this.log('Reading datapoints:', datapointIds);
+
       const results = await this.client.readDatapoints(
         datapointIds,
         (id, err) => this.log(`Warning: Failed to read datapoint ${id}: ${err.message}`)
       );
+
+      this.log('Datapoint results:', JSON.stringify(Array.from(results.entries())));
 
       const actualTemp = results.get(this.getDatapointId(DATAPOINT_OFFSETS.ACTUAL_TEMP));
       if (actualTemp) {
@@ -342,6 +348,7 @@ class RoomDevice extends Homey.Device {
 
       await this.handlePollSuccess();
     } catch (error) {
+      this.error('Poll error:', error);
       await this.handlePollFailure(error);
     }
   }

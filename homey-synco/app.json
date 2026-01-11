@@ -21,6 +21,56 @@
   "permissions": [
     "homey:manager:api"
   ],
+  "settings": [
+    {
+      "type": "group",
+      "title": {
+        "en": "Gateway Connection",
+        "de": "Gateway-Verbindung"
+      },
+      "children": [
+        {
+          "id": "gateway_host",
+          "type": "text",
+          "title": {
+            "en": "Gateway IP Address",
+            "de": "Gateway IP-Adresse"
+          },
+          "hint": {
+            "en": "IP address of your OZW772/OZW672 gateway",
+            "de": "IP-Adresse Ihres OZW772/OZW672 Gateways"
+          },
+          "value": ""
+        },
+        {
+          "id": "gateway_username",
+          "type": "text",
+          "title": {
+            "en": "Username",
+            "de": "Benutzername"
+          },
+          "hint": {
+            "en": "Username for gateway login",
+            "de": "Benutzername für Gateway-Anmeldung"
+          },
+          "value": ""
+        },
+        {
+          "id": "gateway_password",
+          "type": "password",
+          "title": {
+            "en": "Password",
+            "de": "Passwort"
+          },
+          "hint": {
+            "en": "Password for gateway login",
+            "de": "Passwort für Gateway-Anmeldung"
+          },
+          "value": ""
+        }
+      ]
+    }
+  ],
   "images": {
     "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",
@@ -449,7 +499,8 @@
           "id": "list_devices",
           "template": "list_devices",
           "navigation": {
-            "prev": "login_credentials"
+            "prev": "login_credentials",
+            "next": "add_devices"
           }
         },
         {

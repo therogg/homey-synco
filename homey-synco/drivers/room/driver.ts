@@ -73,6 +73,13 @@ class RoomDriver extends Homey.Driver {
         await client.login();
         credentials = data;
         this.log('Login successful');
+
+        // Save credentials to app settings for next time
+        await this.homey.settings.set('gateway_host', data.host);
+        await this.homey.settings.set('gateway_username', data.username);
+        await this.homey.settings.set('gateway_password', data.password);
+        this.log('Credentials saved to app settings');
+
         return true;
       } catch (error) {
         this.error('Login failed:', error);
@@ -130,12 +137,16 @@ class RoomDriver extends Homey.Driver {
    */
   async discoverRooms(client: OZW772Client): Promise<MenuItem[]> {
     try {
+      this.log('Fetching menu tree for ID:', DEVICE_IDS.ROOMS);
       const menuTree = await client.getMenuTree(DEVICE_IDS.ROOMS);
+      this.log('Menu tree response:', JSON.stringify(menuTree, null, 2));
 
       if (menuTree.MenuItems && menuTree.MenuItems.length > 0) {
-        return menuTree.MenuItems.filter(item => item.HasSubMenu === 'true');
+        this.log('Found rooms:', menuTree.MenuItems.length);
+        return menuTree.MenuItems;
       }
 
+      this.log('No MenuItems found in response');
       return [];
     } catch (error) {
       this.error('Failed to get rooms from menu tree:', error);
