@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "Siemens Synco Living",
+    "description": "Steuerung von Siemens Synco Living Raumreglern über OZW772/OZW672 Gateway"
+  },
+  "drivers": {
+    "room": {
+      "name": "Raumregler"
+    }
+  },
+  "pair": {
+    "login": {
+      "title": "Mit OZW Gateway verbinden",
+      "host": "Gateway IP-Adresse",
+      "username": "Benutzername",
+      "password": "Passwort"
+    },
+    "list_devices": {
+      "title": "Räume auswählen"
+    }
+  }
+}

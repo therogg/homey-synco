@@ -1,0 +1,31 @@
+{
+  "id": "com.siemens.synco",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": ["local"],
+  "name": {
+    "en": "Siemens Synco Living",
+    "de": "Siemens Synco Living"
+  },
+  "description": {
+    "en": "Control Siemens Synco Living room controllers via OZW772/OZW672 gateway",
+    "de": "Steuerung von Siemens Synco Living Raumreglern über OZW772/OZW672 Gateway"
+  },
+  "category": ["climate"],
+  "permissions": ["homey:manager:api"],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Synco Living Developer",
+    "email": "developer@example.com"
+  },
+  "brandColor": "#009999",
+  "tags": {
+    "en": ["siemens", "synco", "hvac", "heating", "climate", "room controller", "ozw772", "ozw672"],
+    "de": ["siemens", "synco", "heizung", "klima", "raumregler", "ozw772", "ozw672"]
+  }
+}

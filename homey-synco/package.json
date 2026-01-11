@@ -1,0 +1,16 @@
+{
+  "name": "com.siemens.synco",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"No tests configured yet\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.8",
+    "typescript": "^5.3.3"
+  }
+}
