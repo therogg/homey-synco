@@ -19,5 +19,5 @@
   "step": 0.5,
   "getable": true,
   "setable": true,
-  "uiComponent": "thermostat"
+  "uiComponent": "slider"
 }

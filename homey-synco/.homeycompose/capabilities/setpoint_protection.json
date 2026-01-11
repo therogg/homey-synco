@@ -1,0 +1,23 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Protection Setpoint",
+    "de": "Schutz-Sollwert"
+  },
+  "units": {
+    "en": "°C"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Temperature setpoint for protection mode",
+    "de": "Solltemperatur für Schutz-Modus"
+  },
+  "chartType": "stepLine",
+  "decimals": 1,
+  "min": 5,
+  "max": 15,
+  "step": 0.5,
+  "getable": true,
+  "setable": true,
+  "uiComponent": "slider"
+}

@@ -479,7 +479,8 @@
         "thermostat_mode",
         "setpoint_comfort",
         "setpoint_precomfort",
-        "setpoint_economy"
+        "setpoint_economy",
+        "setpoint_protection"
       ],
       "capabilitiesOptions": {
         "target_temperature": {
@@ -593,7 +594,7 @@
       "step": 0.5,
       "getable": true,
       "setable": true,
-      "uiComponent": "thermostat"
+      "uiComponent": "slider"
     },
     "setpoint_economy": {
       "type": "number",
@@ -616,7 +617,7 @@
       "step": 0.5,
       "getable": true,
       "setable": true,
-      "uiComponent": "thermostat"
+      "uiComponent": "slider"
     },
     "setpoint_precomfort": {
       "type": "number",
@@ -639,7 +640,30 @@
       "step": 0.5,
       "getable": true,
       "setable": true,
-      "uiComponent": "thermostat"
+      "uiComponent": "slider"
+    },
+    "setpoint_protection": {
+      "type": "number",
+      "title": {
+        "en": "Protection Setpoint",
+        "de": "Schutz-Sollwert"
+      },
+      "units": {
+        "en": "°C"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Temperature setpoint for protection mode",
+        "de": "Solltemperatur für Schutz-Modus"
+      },
+      "chartType": "stepLine",
+      "decimals": 1,
+      "min": 5,
+      "max": 15,
+      "step": 0.5,
+      "getable": true,
+      "setable": true,
+      "uiComponent": "slider"
     },
     "thermostat_mode": {
       "type": "enum",

@@ -11,7 +11,8 @@
     "thermostat_mode",
     "setpoint_comfort",
     "setpoint_precomfort",
-    "setpoint_economy"
+    "setpoint_economy",
+    "setpoint_protection"
   ],
   "capabilitiesOptions": {
     "target_temperature": {

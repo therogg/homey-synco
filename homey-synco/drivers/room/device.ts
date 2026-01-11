@@ -129,6 +129,8 @@ class RoomDevice extends Homey.Device {
       this.onCapabilitySetpoint('precomfort', value));
     this.registerCapabilityListener('setpoint_economy', (value: number) =>
       this.onCapabilitySetpoint('economy', value));
+    this.registerCapabilityListener('setpoint_protection', (value: number) =>
+      this.onCapabilitySetpoint('protection', value));
 
     this.registerFlowCards();
 
@@ -152,6 +154,7 @@ class RoomDevice extends Homey.Device {
       'setpoint_comfort',
       'setpoint_precomfort',
       'setpoint_economy',
+      'setpoint_protection',
     ];
 
     for (const capability of requiredCapabilities) {
@@ -327,6 +330,7 @@ class RoomDevice extends Homey.Device {
         this.getDatapointId(DATAPOINT_OFFSETS.COMFORT_SETPOINT),
         this.getDatapointId(DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT),
         this.getDatapointId(DATAPOINT_OFFSETS.ECONOMY_SETPOINT),
+        this.getDatapointId(DATAPOINT_OFFSETS.PROTECTION_SETPOINT),
       ];
 
       this.log('Reading datapoints:', datapointIds);
@@ -409,6 +413,14 @@ class RoomDevice extends Homey.Device {
         const temp = OZW772Client.parseNumericValue(economySetpoint);
         if (temp !== null) {
           await this.setCapabilityValue('setpoint_economy', temp).catch(this.error);
+        }
+      }
+
+      const protectionSetpoint = results.get(this.getDatapointId(DATAPOINT_OFFSETS.PROTECTION_SETPOINT));
+      if (protectionSetpoint) {
+        const temp = OZW772Client.parseNumericValue(protectionSetpoint);
+        if (temp !== null) {
+          await this.setCapabilityValue('setpoint_protection', temp).catch(this.error);
         }
       }
 
@@ -551,6 +563,7 @@ class RoomDevice extends Homey.Device {
       comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
       precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
       economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
+      protection: DATAPOINT_OFFSETS.PROTECTION_SETPOINT,
     };
 
     const offset = setpointTypeToOffset[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
@@ -617,6 +630,7 @@ class RoomDevice extends Homey.Device {
       comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
       precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
       economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
+      protection: DATAPOINT_OFFSETS.PROTECTION_SETPOINT,
     };
 
     const offset = setpointTypeToOffset[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
