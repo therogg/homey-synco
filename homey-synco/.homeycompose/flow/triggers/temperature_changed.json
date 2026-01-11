@@ -1,0 +1,29 @@
+{
+  "id": "temperature_changed",
+  "title": {
+    "en": "Temperature changed",
+    "de": "Temperatur hat sich geändert"
+  },
+  "titleFormatted": {
+    "en": "The temperature of [[device]] changed",
+    "de": "Die Temperatur von [[device]] hat sich geändert"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=room"
+    }
+  ],
+  "tokens": [
+    {
+      "type": "number",
+      "name": "temperature",
+      "title": {
+        "en": "Temperature",
+        "de": "Temperatur"
+      },
+      "example": 21.5
+    }
+  ]
+}

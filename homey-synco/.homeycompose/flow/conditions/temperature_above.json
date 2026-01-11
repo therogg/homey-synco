@@ -1,0 +1,29 @@
+{
+  "id": "temperature_above",
+  "title": {
+    "en": "Temperature is above",
+    "de": "Temperatur ist über"
+  },
+  "titleFormatted": {
+    "en": "Temperature of [[device]] is above [[temperature]] °C",
+    "de": "Temperatur von [[device]] ist über [[temperature]] °C"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=room"
+    },
+    {
+      "type": "number",
+      "name": "temperature",
+      "min": 0,
+      "max": 40,
+      "step": 0.5,
+      "placeholder": {
+        "en": "Temperature",
+        "de": "Temperatur"
+      }
+    }
+  ]
+}

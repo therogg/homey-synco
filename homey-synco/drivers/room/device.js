@@ -38,6 +38,9 @@ class RoomDevice extends homey_1.default.Device {
         this.client = null;
         this.pollInterval = null;
         this.roomBaseId = 0;
+        this.previousTemperature = null;
+        this.previousMode = null;
+        this.previousValvePosition = null;
     }
     async onInit() {
         this.log('Room device initialized:', this.getName());
@@ -55,9 +58,71 @@ class RoomDevice extends homey_1.default.Device {
         this.roomBaseId = parseInt(store.roomMenuId, 10);
         this.registerCapabilityListener('target_temperature', this.onCapabilityTargetTemperature.bind(this));
         this.registerCapabilityListener('thermostat_mode', this.onCapabilityThermostatMode.bind(this));
+        this.registerFlowCards();
         await this.pollData();
         this.startPolling();
         this.log('Room device polling started');
+    }
+    registerFlowCards() {
+        this.temperatureChangedTrigger = this.homey.flow.getDeviceTriggerCard('temperature_changed');
+        this.modeChangedTrigger = this.homey.flow.getDeviceTriggerCard('mode_changed');
+        this.valveOpenedTrigger = this.homey.flow.getDeviceTriggerCard('valve_opened');
+        this.valveOpenedTrigger.registerRunListener(async (args, state) => {
+            return state.valve_position > args.threshold;
+        });
+        this.homey.flow.getConditionCard('temperature_above')
+            .registerRunListener(async (args) => {
+            const temp = args.device.getCapabilityValue('measure_temperature');
+            return temp !== null && temp > args.temperature;
+        });
+        this.homey.flow.getConditionCard('temperature_below')
+            .registerRunListener(async (args) => {
+            const temp = args.device.getCapabilityValue('measure_temperature');
+            return temp !== null && temp < args.temperature;
+        });
+        this.homey.flow.getConditionCard('mode_is')
+            .registerRunListener(async (args) => {
+            const mode = args.device.getCapabilityValue('thermostat_mode');
+            return mode === args.mode;
+        });
+        this.homey.flow.getConditionCard('valve_above')
+            .registerRunListener(async (args) => {
+            const position = args.device.getCapabilityValue('valve_position');
+            return position !== null && position > args.position;
+        });
+        this.homey.flow.getActionCard('set_temperature')
+            .registerRunListener(async (args) => {
+            await args.device.triggerCapabilityListener('target_temperature', args.temperature);
+        });
+        this.homey.flow.getActionCard('set_mode')
+            .registerRunListener(async (args) => {
+            await args.device.triggerCapabilityListener('thermostat_mode', args.mode);
+        });
+        this.homey.flow.getActionCard('set_absence')
+            .registerRunListener(async (args) => {
+            await args.device.setAbsenceMode(args.action === 'enable');
+        });
+        this.log('Flow cards registered');
+    }
+    async setAbsenceMode(enable) {
+        if (!this.client) {
+            throw new Error('Not connected to gateway');
+        }
+        this.log(`Setting absence mode to ${enable ? 'enabled' : 'disabled'}`);
+        const absenceModeId = this.getDatapointId(constants_1.DATAPOINT_OFFSETS.ABSENCE_MODE);
+        const enumValue = enable ? '1' : '0';
+        const displayValue = enable ? 'Aktiv' : 'Inaktiv';
+        try {
+            const success = await this.client.writeEnumeration(absenceModeId, displayValue, enumValue);
+            if (!success) {
+                throw new Error('Failed to write absence mode');
+            }
+            this.log('Absence mode updated successfully');
+        }
+        catch (error) {
+            this.error('Failed to set absence mode:', error);
+            throw error;
+        }
     }
     startPolling() {
         const settings = this.getSettings();
@@ -100,6 +165,10 @@ class RoomDevice extends homey_1.default.Device {
                 const temp = OZW772Client_1.OZW772Client.parseNumericValue(actualTemp);
                 if (temp !== null) {
                     await this.setCapabilityValue('measure_temperature', temp).catch(this.error);
+                    if (this.previousTemperature !== null && this.previousTemperature !== temp) {
+                        await this.temperatureChangedTrigger.trigger(this, { temperature: temp }).catch(this.error);
+                    }
+                    this.previousTemperature = temp;
                 }
             }
             const setpoint = results.get(this.getDatapointId(constants_1.DATAPOINT_OFFSETS.CURRENT_SETPOINT));
@@ -114,12 +183,22 @@ class RoomDevice extends homey_1.default.Device {
                 const position = OZW772Client_1.OZW772Client.parseNumericValue(valve);
                 if (position !== null) {
                     await this.setCapabilityValue('valve_position', position).catch(this.error);
+                    if (this.previousValvePosition !== null &&
+                        this.previousValvePosition !== position) {
+                        await this.valveOpenedTrigger.trigger(this, { valve_position: position }, { valve_position: position }).catch(this.error);
+                    }
+                    this.previousValvePosition = position;
                 }
             }
             const mode = results.get(this.getDatapointId(constants_1.DATAPOINT_OFFSETS.MODE_STATE));
             if (mode) {
                 const modeValue = this.mapEnumToMode(mode.EnumValue);
                 await this.setCapabilityValue('thermostat_mode', modeValue).catch(this.error);
+                if (this.previousMode !== null && this.previousMode !== modeValue) {
+                    const modeDisplayName = this.getModeDisplayValue(modeValue);
+                    await this.modeChangedTrigger.trigger(this, { mode: modeDisplayName }).catch(this.error);
+                }
+                this.previousMode = modeValue;
             }
             await this.setAvailable();
         }

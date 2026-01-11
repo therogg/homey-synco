@@ -1,0 +1,59 @@
+{
+  "id": "mode_is",
+  "title": {
+    "en": "Operating mode is",
+    "de": "Betriebsmodus ist"
+  },
+  "titleFormatted": {
+    "en": "Operating mode of [[device]] is [[mode]]",
+    "de": "Betriebsmodus von [[device]] ist [[mode]]"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=room"
+    },
+    {
+      "type": "dropdown",
+      "name": "mode",
+      "values": [
+        {
+          "id": "auto",
+          "label": {
+            "en": "Automatic",
+            "de": "Automatik"
+          }
+        },
+        {
+          "id": "comfort",
+          "label": {
+            "en": "Comfort",
+            "de": "Komfort"
+          }
+        },
+        {
+          "id": "precomfort",
+          "label": {
+            "en": "Pre-Comfort",
+            "de": "Vorkomfort"
+          }
+        },
+        {
+          "id": "economy",
+          "label": {
+            "en": "Economy",
+            "de": "Eco"
+          }
+        },
+        {
+          "id": "protection",
+          "label": {
+            "en": "Protection",
+            "de": "Schutz"
+          }
+        }
+      ]
+    }
+  ]
+}

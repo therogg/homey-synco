@@ -59,6 +59,102 @@
       }
     }
   },
+  "flow": {
+    "triggers": {
+      "temperature_changed": {
+        "title": "Temperatur hat sich geändert",
+        "titleFormatted": "Die Temperatur von [[device]] hat sich geändert",
+        "tokens": {
+          "temperature": "Temperatur"
+        }
+      },
+      "mode_changed": {
+        "title": "Betriebsmodus hat sich geändert",
+        "titleFormatted": "Der Betriebsmodus von [[device]] hat sich geändert",
+        "tokens": {
+          "mode": "Modus"
+        }
+      },
+      "valve_opened": {
+        "title": "Ventil über Schwellwert geöffnet",
+        "titleFormatted": "Das Ventil von [[device]] öffnete über [[threshold]] %",
+        "args": {
+          "threshold": "Schwellwert %"
+        },
+        "tokens": {
+          "valve_position": "Ventilstellung"
+        }
+      }
+    },
+    "conditions": {
+      "temperature_above": {
+        "title": "Temperatur ist über",
+        "titleFormatted": "Temperatur von [[device]] ist über [[temperature]] °C",
+        "args": {
+          "temperature": "Temperatur"
+        }
+      },
+      "temperature_below": {
+        "title": "Temperatur ist unter",
+        "titleFormatted": "Temperatur von [[device]] ist unter [[temperature]] °C",
+        "args": {
+          "temperature": "Temperatur"
+        }
+      },
+      "mode_is": {
+        "title": "Betriebsmodus ist",
+        "titleFormatted": "Betriebsmodus von [[device]] ist [[mode]]",
+        "args": {
+          "mode": {
+            "auto": "Automatik",
+            "comfort": "Komfort",
+            "precomfort": "Vorkomfort",
+            "economy": "Eco",
+            "protection": "Schutz"
+          }
+        }
+      },
+      "valve_above": {
+        "title": "Ventilstellung ist über",
+        "titleFormatted": "Ventilstellung von [[device]] ist über [[position]] %",
+        "args": {
+          "position": "Stellung %"
+        }
+      }
+    },
+    "actions": {
+      "set_temperature": {
+        "title": "Temperatur setzen",
+        "titleFormatted": "Setze Temperatur von [[device]] auf [[temperature]] °C",
+        "args": {
+          "temperature": "Temperatur"
+        }
+      },
+      "set_mode": {
+        "title": "Betriebsmodus setzen",
+        "titleFormatted": "Setze Betriebsmodus von [[device]] auf [[mode]]",
+        "args": {
+          "mode": {
+            "auto": "Automatik",
+            "comfort": "Komfort",
+            "precomfort": "Vorkomfort",
+            "economy": "Eco",
+            "protection": "Schutz"
+          }
+        }
+      },
+      "set_absence": {
+        "title": "Abwesenheitsmodus setzen",
+        "titleFormatted": "Abwesenheitsmodus für [[device]] [[action]]",
+        "args": {
+          "action": {
+            "enable": "Aktivieren",
+            "disable": "Deaktivieren"
+          }
+        }
+      }
+    }
+  },
   "errors": {
     "connection_failed": "Verbindung fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.",
     "no_rooms_found": "Keine Räume auf dem Gateway gefunden.",

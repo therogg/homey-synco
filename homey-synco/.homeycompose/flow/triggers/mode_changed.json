@@ -1,0 +1,32 @@
+{
+  "id": "mode_changed",
+  "title": {
+    "en": "Operating mode changed",
+    "de": "Betriebsmodus hat sich geändert"
+  },
+  "titleFormatted": {
+    "en": "The operating mode of [[device]] changed",
+    "de": "Der Betriebsmodus von [[device]] hat sich geändert"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=room"
+    }
+  ],
+  "tokens": [
+    {
+      "type": "string",
+      "name": "mode",
+      "title": {
+        "en": "Mode",
+        "de": "Modus"
+      },
+      "example": {
+        "en": "Comfort",
+        "de": "Komfort"
+      }
+    }
+  ]
+}

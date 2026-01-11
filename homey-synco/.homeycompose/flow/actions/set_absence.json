@@ -1,0 +1,38 @@
+{
+  "id": "set_absence",
+  "title": {
+    "en": "Set absence mode",
+    "de": "Abwesenheitsmodus setzen"
+  },
+  "titleFormatted": {
+    "en": "[[action]] absence mode for [[device]]",
+    "de": "Abwesenheitsmodus für [[device]] [[action]]"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=room"
+    },
+    {
+      "type": "dropdown",
+      "name": "action",
+      "values": [
+        {
+          "id": "enable",
+          "label": {
+            "en": "Enable",
+            "de": "Aktivieren"
+          }
+        },
+        {
+          "id": "disable",
+          "label": {
+            "en": "Disable",
+            "de": "Deaktivieren"
+          }
+        }
+      ]
+    }
+  ]
+}

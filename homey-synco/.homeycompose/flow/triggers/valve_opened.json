@@ -1,0 +1,40 @@
+{
+  "id": "valve_opened",
+  "title": {
+    "en": "Valve opened above threshold",
+    "de": "Ventil über Schwellwert geöffnet"
+  },
+  "titleFormatted": {
+    "en": "The valve of [[device]] opened above [[threshold]] %",
+    "de": "Das Ventil von [[device]] öffnete über [[threshold]] %"
+  },
+  "args": [
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=room"
+    },
+    {
+      "type": "number",
+      "name": "threshold",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "placeholder": {
+        "en": "Threshold %",
+        "de": "Schwellwert %"
+      }
+    }
+  ],
+  "tokens": [
+    {
+      "type": "number",
+      "name": "valve_position",
+      "title": {
+        "en": "Valve Position",
+        "de": "Ventilstellung"
+      },
+      "example": 75
+    }
+  ]
+}
