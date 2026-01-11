@@ -4,10 +4,6 @@
     "en": "Set absence mode",
     "de": "Abwesenheitsmodus setzen"
   },
-  "titleFormatted": {
-    "en": "[[action]] absence mode for [[device]]",
-    "de": "Abwesenheitsmodus für [[device]] [[action]]"
-  },
   "args": [
     {
       "type": "device",

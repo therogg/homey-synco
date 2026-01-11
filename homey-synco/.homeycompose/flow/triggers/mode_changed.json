@@ -4,9 +4,9 @@
     "en": "Operating mode changed",
     "de": "Betriebsmodus hat sich geändert"
   },
-  "titleFormatted": {
-    "en": "The operating mode of [[device]] changed",
-    "de": "Der Betriebsmodus von [[device]] hat sich geändert"
+  "hint": {
+    "en": "Triggers when the operating mode changes",
+    "de": "Wird ausgelöst, wenn sich der Betriebsmodus ändert"
   },
   "args": [
     {
@@ -23,10 +23,7 @@
         "en": "Mode",
         "de": "Modus"
       },
-      "example": {
-        "en": "Comfort",
-        "de": "Komfort"
-      }
+      "example": "comfort"
     }
   ]
 }

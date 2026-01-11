@@ -4,10 +4,6 @@
     "en": "Temperature is above",
     "de": "Temperatur ist über"
   },
-  "titleFormatted": {
-    "en": "Temperature of [[device]] is above [[temperature]] °C",
-    "de": "Temperatur von [[device]] ist über [[temperature]] °C"
-  },
   "args": [
     {
       "type": "device",

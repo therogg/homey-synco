@@ -4,10 +4,6 @@
     "en": "Operating mode is",
     "de": "Betriebsmodus ist"
   },
-  "titleFormatted": {
-    "en": "Operating mode of [[device]] is [[mode]]",
-    "de": "Betriebsmodus von [[device]] ist [[mode]]"
-  },
   "args": [
     {
       "type": "device",

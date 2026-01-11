@@ -4,9 +4,9 @@
     "en": "Valve opened above threshold",
     "de": "Ventil über Schwellwert geöffnet"
   },
-  "titleFormatted": {
-    "en": "The valve of [[device]] opened above [[threshold]] %",
-    "de": "Das Ventil von [[device]] öffnete über [[threshold]] %"
+  "hint": {
+    "en": "Triggers when the valve position exceeds the specified threshold",
+    "de": "Wird ausgelöst, wenn die Ventilstellung den Schwellwert überschreitet"
   },
   "args": [
     {

@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": ".",
+    "outDir": "./.homeybuild",
     "rootDir": ".",
     "declaration": false,
     "resolveJsonModule": true,

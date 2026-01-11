@@ -4,10 +4,6 @@
     "en": "Valve position is above",
     "de": "Ventilstellung ist über"
   },
-  "titleFormatted": {
-    "en": "Valve position of [[device]] is above [[position]] %",
-    "de": "Ventilstellung von [[device]] ist über [[position]] %"
-  },
   "args": [
     {
       "type": "device",

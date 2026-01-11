@@ -1,0 +1,587 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.siemens.synco",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Siemens Synco Living",
+    "de": "Siemens Synco Living"
+  },
+  "description": {
+    "en": "Control Siemens Synco Living room controllers via OZW772/OZW672 gateway",
+    "de": "Steuerung von Siemens Synco Living Raumreglern über OZW772/OZW672 Gateway"
+  },
+  "category": [
+    "climate"
+  ],
+  "permissions": [
+    "homey:manager:api"
+  ],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Synco Living Developer",
+    "email": "developer@example.com"
+  },
+  "brandColor": "#009999",
+  "tags": {
+    "en": [
+      "siemens",
+      "synco",
+      "hvac",
+      "heating",
+      "climate",
+      "room controller",
+      "ozw772",
+      "ozw672"
+    ],
+    "de": [
+      "siemens",
+      "synco",
+      "heizung",
+      "klima",
+      "raumregler",
+      "ozw772",
+      "ozw672"
+    ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": ""
+      }
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/homey-synco/issues"
+  },
+  "homeyCommunityTopicId": 0,
+  "source": "https://github.com/your-username/homey-synco",
+  "support": "mailto:developer@example.com",
+  "flow": {
+    "triggers": [
+      {
+        "id": "mode_changed",
+        "title": {
+          "en": "Operating mode changed",
+          "de": "Betriebsmodus hat sich geändert"
+        },
+        "hint": {
+          "en": "Triggers when the operating mode changes",
+          "de": "Wird ausgelöst, wenn sich der Betriebsmodus ändert"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          }
+        ],
+        "tokens": [
+          {
+            "type": "string",
+            "name": "mode",
+            "title": {
+              "en": "Mode",
+              "de": "Modus"
+            },
+            "example": "comfort"
+          }
+        ]
+      },
+      {
+        "id": "temperature_changed",
+        "title": {
+          "en": "Temperature changed",
+          "de": "Temperatur hat sich geändert"
+        },
+        "hint": {
+          "en": "Triggers when the room temperature changes",
+          "de": "Wird ausgelöst, wenn sich die Raumtemperatur ändert"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          }
+        ],
+        "tokens": [
+          {
+            "type": "number",
+            "name": "temperature",
+            "title": {
+              "en": "Temperature",
+              "de": "Temperatur"
+            },
+            "example": 21.5
+          }
+        ]
+      },
+      {
+        "id": "valve_opened",
+        "title": {
+          "en": "Valve opened above threshold",
+          "de": "Ventil über Schwellwert geöffnet"
+        },
+        "hint": {
+          "en": "Triggers when the valve position exceeds the specified threshold",
+          "de": "Wird ausgelöst, wenn die Ventilstellung den Schwellwert überschreitet"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "number",
+            "name": "threshold",
+            "min": 0,
+            "max": 100,
+            "step": 5,
+            "placeholder": {
+              "en": "Threshold %",
+              "de": "Schwellwert %"
+            }
+          }
+        ],
+        "tokens": [
+          {
+            "type": "number",
+            "name": "valve_position",
+            "title": {
+              "en": "Valve Position",
+              "de": "Ventilstellung"
+            },
+            "example": 75
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "mode_is",
+        "title": {
+          "en": "Operating mode is",
+          "de": "Betriebsmodus ist"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "values": [
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Automatic",
+                  "de": "Automatik"
+                }
+              },
+              {
+                "id": "comfort",
+                "label": {
+                  "en": "Comfort",
+                  "de": "Komfort"
+                }
+              },
+              {
+                "id": "precomfort",
+                "label": {
+                  "en": "Pre-Comfort",
+                  "de": "Vorkomfort"
+                }
+              },
+              {
+                "id": "economy",
+                "label": {
+                  "en": "Economy",
+                  "de": "Eco"
+                }
+              },
+              {
+                "id": "protection",
+                "label": {
+                  "en": "Protection",
+                  "de": "Schutz"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "temperature_above",
+        "title": {
+          "en": "Temperature is above",
+          "de": "Temperatur ist über"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "number",
+            "name": "temperature",
+            "min": 0,
+            "max": 40,
+            "step": 0.5,
+            "placeholder": {
+              "en": "Temperature",
+              "de": "Temperatur"
+            }
+          }
+        ]
+      },
+      {
+        "id": "temperature_below",
+        "title": {
+          "en": "Temperature is below",
+          "de": "Temperatur ist unter"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "number",
+            "name": "temperature",
+            "min": 0,
+            "max": 40,
+            "step": 0.5,
+            "placeholder": {
+              "en": "Temperature",
+              "de": "Temperatur"
+            }
+          }
+        ]
+      },
+      {
+        "id": "valve_above",
+        "title": {
+          "en": "Valve position is above",
+          "de": "Ventilstellung ist über"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "number",
+            "name": "position",
+            "min": 0,
+            "max": 100,
+            "step": 5,
+            "placeholder": {
+              "en": "Position %",
+              "de": "Stellung %"
+            }
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "set_absence",
+        "title": {
+          "en": "Set absence mode",
+          "de": "Abwesenheitsmodus setzen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "dropdown",
+            "name": "action",
+            "values": [
+              {
+                "id": "enable",
+                "label": {
+                  "en": "Enable",
+                  "de": "Aktivieren"
+                }
+              },
+              {
+                "id": "disable",
+                "label": {
+                  "en": "Disable",
+                  "de": "Deaktivieren"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_mode",
+        "title": {
+          "en": "Set operating mode",
+          "de": "Betriebsmodus setzen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "dropdown",
+            "name": "mode",
+            "values": [
+              {
+                "id": "auto",
+                "label": {
+                  "en": "Automatic",
+                  "de": "Automatik"
+                }
+              },
+              {
+                "id": "comfort",
+                "label": {
+                  "en": "Comfort",
+                  "de": "Komfort"
+                }
+              },
+              {
+                "id": "precomfort",
+                "label": {
+                  "en": "Pre-Comfort",
+                  "de": "Vorkomfort"
+                }
+              },
+              {
+                "id": "economy",
+                "label": {
+                  "en": "Economy",
+                  "de": "Eco"
+                }
+              },
+              {
+                "id": "protection",
+                "label": {
+                  "en": "Protection",
+                  "de": "Schutz"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set_temperature",
+        "title": {
+          "en": "Set temperature",
+          "de": "Temperatur setzen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=room"
+          },
+          {
+            "type": "number",
+            "name": "temperature",
+            "min": 5,
+            "max": 30,
+            "step": 0.5,
+            "placeholder": {
+              "en": "Temperature",
+              "de": "Temperatur"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "Room",
+        "de": "Raum"
+      },
+      "class": "thermostat",
+      "capabilities": [
+        "measure_temperature",
+        "target_temperature",
+        "valve_position",
+        "thermostat_mode"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 5,
+          "max": 30,
+          "step": 0.5
+        }
+      },
+      "energy": {
+        "approximation": {
+          "usageOn": 0,
+          "usageOff": 0
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "prev": "login_credentials"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/room/assets/images/small.png",
+        "large": "/drivers/room/assets/images/large.png"
+      },
+      "id": "room",
+      "settings": [
+        {
+          "id": "poll_interval",
+          "type": "number",
+          "label": {
+            "en": "Polling Interval (seconds)",
+            "de": "Abfrageintervall (Sekunden)"
+          },
+          "hint": {
+            "en": "How often to poll the gateway for updates",
+            "de": "Wie oft das Gateway abgefragt wird"
+          },
+          "value": 60,
+          "min": 30,
+          "max": 300
+        },
+        {
+          "id": "setpoint_type",
+          "type": "dropdown",
+          "label": {
+            "en": "Target Temperature Mode",
+            "de": "Sollwert-Modus"
+          },
+          "hint": {
+            "en": "Which setpoint to control when changing target temperature",
+            "de": "Welcher Sollwert beim Ändern der Zieltemperatur gesteuert wird"
+          },
+          "value": "comfort",
+          "values": [
+            {
+              "id": "comfort",
+              "label": {
+                "en": "Comfort",
+                "de": "Komfort"
+              }
+            },
+            {
+              "id": "precomfort",
+              "label": {
+                "en": "Pre-Comfort",
+                "de": "Vorkomfort"
+              }
+            },
+            {
+              "id": "economy",
+              "label": {
+                "en": "Economy",
+                "de": "Eco"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "thermostat_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Operating Mode",
+        "de": "Betriebsmodus"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker",
+      "values": [
+        {
+          "id": "auto",
+          "title": {
+            "en": "Automatic",
+            "de": "Automatik"
+          }
+        },
+        {
+          "id": "comfort",
+          "title": {
+            "en": "Comfort",
+            "de": "Komfort"
+          }
+        },
+        {
+          "id": "precomfort",
+          "title": {
+            "en": "Pre-Comfort",
+            "de": "Vorkomfort"
+          }
+        },
+        {
+          "id": "economy",
+          "title": {
+            "en": "Economy",
+            "de": "Eco"
+          }
+        },
+        {
+          "id": "protection",
+          "title": {
+            "en": "Protection",
+            "de": "Schutz"
+          }
+        }
+      ]
+    },
+    "valve_position": {
+      "type": "number",
+      "title": {
+        "en": "Valve Position",
+        "de": "Ventilstellung"
+      },
+      "units": {
+        "en": "%",
+        "de": "%"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/valve.svg",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    }
+  }
+}

@@ -4,9 +4,9 @@
     "en": "Temperature changed",
     "de": "Temperatur hat sich geändert"
   },
-  "titleFormatted": {
-    "en": "The temperature of [[device]] changed",
-    "de": "Die Temperatur von [[device]] hat sich geändert"
+  "hint": {
+    "en": "Triggers when the room temperature changes",
+    "de": "Wird ausgelöst, wenn sich die Raumtemperatur ändert"
   },
   "args": [
     {
