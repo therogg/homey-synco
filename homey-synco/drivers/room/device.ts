@@ -1,7 +1,16 @@
+/**
+ * Room Device Driver for Siemens Synco Living
+ *
+ * @description Handles communication with individual room thermostats connected
+ * to a Siemens OZW772/OZW672 gateway. Provides temperature monitoring, setpoint
+ * control, and operating mode management.
+ */
+
 import Homey from 'homey';
-import { OZW772Client } from '../../lib/OZW772Client';
+import { OZW772Client, OZW772Error } from '../../lib/OZW772Client';
 import { DATAPOINT_OFFSETS } from '../../lib/constants';
 
+/** Room device store structure */
 interface RoomStore {
   host: string;
   username: string;
@@ -12,12 +21,20 @@ interface RoomStore {
   modeMenuId: string;
 }
 
+/** Room device settings structure */
 interface RoomSettings {
   poll_interval: number;
   setpoint_type: 'comfort' | 'precomfort' | 'economy';
 }
 
+/** Supported thermostat operating modes */
 type ThermostatMode = 'auto' | 'comfort' | 'precomfort' | 'economy' | 'protection';
+
+/** Number of consecutive failures before marking device unavailable */
+const FAILURE_THRESHOLD = 3;
+
+/** Number of consecutive successes before marking device available again */
+const RECOVERY_THRESHOLD = 2;
 
 const MODE_TO_ENUM: Record<ThermostatMode, string> = {
   auto: '0',
@@ -49,6 +66,9 @@ const SETPOINT_OFFSETS: Record<string, number> = {
   economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
 };
 
+/**
+ * Room Device class for Synco Living room thermostats
+ */
 class RoomDevice extends Homey.Device {
   private client: OZW772Client | null = null;
   private pollInterval: NodeJS.Timeout | null = null;
@@ -58,10 +78,23 @@ class RoomDevice extends Homey.Device {
   private previousMode: string | null = null;
   private previousValvePosition: number | null = null;
 
+  /** Counter for consecutive poll failures */
+  private consecutiveFailures: number = 0;
+
+  /** Counter for consecutive poll successes (used for recovery) */
+  private consecutiveSuccesses: number = 0;
+
+  /** Last error message for debugging (accessible via getLastError) */
+  private _lastError: string | null = null;
+
   private temperatureChangedTrigger!: Homey.FlowCardTriggerDevice;
   private modeChangedTrigger!: Homey.FlowCardTriggerDevice;
   private valveOpenedTrigger!: Homey.FlowCardTriggerDevice;
 
+  /**
+   * Initialize the device
+   * Sets up client connection, registers capability listeners, and starts polling
+   */
   async onInit(): Promise<void> {
     this.log('Room device initialized:', this.getName());
 
@@ -69,7 +102,7 @@ class RoomDevice extends Homey.Device {
 
     if (!store.host || !store.username || !store.password) {
       this.error('Missing credentials in device store');
-      this.setUnavailable('Missing gateway credentials').catch(this.error);
+      await this.setUnavailable('Missing gateway credentials').catch(this.error);
       return;
     }
 
@@ -93,6 +126,9 @@ class RoomDevice extends Homey.Device {
     this.log('Room device polling started');
   }
 
+  /**
+   * Register all flow cards (triggers, conditions, actions)
+   */
   private registerFlowCards(): void {
     this.temperatureChangedTrigger = this.homey.flow.getDeviceTriggerCard('temperature_changed');
     this.modeChangedTrigger = this.homey.flow.getDeviceTriggerCard('mode_changed');
@@ -144,6 +180,11 @@ class RoomDevice extends Homey.Device {
     this.log('Flow cards registered');
   }
 
+  /**
+   * Set the absence/vacation mode for the room
+   * @param enable - True to enable absence mode, false to disable
+   * @throws {Error} When not connected or write fails
+   */
   async setAbsenceMode(enable: boolean): Promise<void> {
     if (!this.client) {
       throw new Error('Not connected to gateway');
@@ -173,6 +214,9 @@ class RoomDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Start the polling interval for data updates
+   */
   private startPolling(): void {
     const settings = this.getSettings() as RoomSettings;
     const intervalMs = (settings.poll_interval || 60) * 1000;
@@ -189,25 +233,46 @@ class RoomDevice extends Homey.Device {
     this.log(`Polling interval set to ${intervalMs / 1000} seconds`);
   }
 
+  /**
+   * Calculate the datapoint ID from the room base ID and offset
+   * @param offset - Datapoint offset from DATAPOINT_OFFSETS
+   */
   private getDatapointId(offset: number): string {
     return (this.roomBaseId + offset).toString();
   }
 
+  /**
+   * Map API enum value to thermostat mode string
+   * @param enumValue - Enum value from API
+   */
   private mapEnumToMode(enumValue: string | undefined): ThermostatMode {
     if (!enumValue) return 'auto';
     return ENUM_TO_MODE[enumValue] || 'auto';
   }
 
+  /**
+   * Map thermostat mode string to API enum value
+   * @param mode - Thermostat mode string
+   */
   private mapModeToEnum(mode: string): string {
     return MODE_TO_ENUM[mode as ThermostatMode] || '0';
   }
 
+  /**
+   * Get the display value for a thermostat mode
+   * @param mode - Thermostat mode string
+   */
   private getModeDisplayValue(mode: string): string {
     return MODE_DISPLAY_VALUES[mode as ThermostatMode] || 'Automatik';
   }
 
+  /**
+   * Poll data from the gateway and update device capabilities
+   * Implements graceful error handling with availability management
+   */
   async pollData(): Promise<void> {
     if (!this.client) {
+      this.error('Cannot poll: client not initialized');
       return;
     }
 
@@ -221,7 +286,10 @@ class RoomDevice extends Homey.Device {
         this.getDatapointId(DATAPOINT_OFFSETS.MODE_STATE),
       ];
 
-      const results = await this.client.readDatapoints(datapointIds);
+      const results = await this.client.readDatapoints(
+        datapointIds,
+        (id, err) => this.log(`Warning: Failed to read datapoint ${id}: ${err.message}`)
+      );
 
       const actualTemp = results.get(this.getDatapointId(DATAPOINT_OFFSETS.ACTUAL_TEMP));
       if (actualTemp) {
@@ -272,13 +340,91 @@ class RoomDevice extends Homey.Device {
         this.previousMode = modeValue;
       }
 
-      await this.setAvailable();
+      await this.handlePollSuccess();
     } catch (error) {
-      this.error('Failed to poll data:', error);
-      await this.setUnavailable('Connection error').catch(this.error);
+      await this.handlePollFailure(error);
     }
   }
 
+  /**
+   * Handle successful poll - manage availability recovery
+   */
+  private async handlePollSuccess(): Promise<void> {
+    this.consecutiveFailures = 0;
+    this.consecutiveSuccesses++;
+    this._lastError = null;
+
+    if (!this.getAvailable() && this.consecutiveSuccesses >= RECOVERY_THRESHOLD) {
+      this.log('Connection recovered, marking device as available');
+      await this.setAvailable();
+      this.consecutiveSuccesses = 0;
+    }
+  }
+
+  /**
+   * Handle poll failure - manage availability and error logging
+   * @param error - The error that occurred
+   */
+  private async handlePollFailure(error: unknown): Promise<void> {
+    this.consecutiveSuccesses = 0;
+    this.consecutiveFailures++;
+
+    const errorMessage = this.getErrorMessage(error);
+    this._lastError = errorMessage;
+
+    if (this.consecutiveFailures === 1) {
+      this.log(`Poll failed (attempt ${this.consecutiveFailures}/${FAILURE_THRESHOLD}): ${errorMessage}`);
+    } else if (this.consecutiveFailures <= FAILURE_THRESHOLD) {
+      this.log(`Poll failed (attempt ${this.consecutiveFailures}/${FAILURE_THRESHOLD})`);
+    }
+
+    if (this.getAvailable() && this.consecutiveFailures >= FAILURE_THRESHOLD) {
+      this.error(`Connection lost after ${FAILURE_THRESHOLD} failures: ${errorMessage}`);
+      await this.setUnavailable(this.getUserFriendlyError(error)).catch(this.error);
+    }
+  }
+
+  /**
+   * Extract a descriptive error message from an error
+   * @param error - The error to extract message from
+   */
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof OZW772Error) {
+      return `[${error.code}] ${error.message}`;
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'Unknown error';
+  }
+
+  /**
+   * Get a user-friendly error message for the Homey UI
+   * @param error - The error to convert
+   */
+  private getUserFriendlyError(error: unknown): string {
+    if (error instanceof OZW772Error) {
+      switch (error.code) {
+        case 'ECONNREFUSED':
+          return 'Gateway not reachable';
+        case 'TIMEOUT':
+          return 'Gateway not responding';
+        case 'AUTH_ERROR':
+          return 'Authentication failed';
+        case 'ENOTFOUND':
+          return 'Gateway not found';
+        default:
+          return 'Connection error';
+      }
+    }
+    return 'Connection error';
+  }
+
+  /**
+   * Handle target temperature capability changes
+   * @param value - New target temperature value
+   * @throws {Error} When not connected or write fails
+   */
   async onCapabilityTargetTemperature(value: number): Promise<void> {
     if (!this.client) {
       throw new Error('Not connected to gateway');
@@ -305,6 +451,11 @@ class RoomDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Handle thermostat mode capability changes
+   * @param value - New thermostat mode value
+   * @throws {Error} When not connected or write fails
+   */
   async onCapabilityThermostatMode(value: string): Promise<void> {
     if (!this.client) {
       throw new Error('Not connected to gateway');
@@ -334,6 +485,10 @@ class RoomDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Handle settings changes
+   * @param options - Settings change options containing old/new settings and changed keys
+   */
   async onSettings({
     newSettings,
     changedKeys,
@@ -350,6 +505,9 @@ class RoomDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Clean up when device is deleted
+   */
   async onDeleted(): Promise<void> {
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
@@ -358,6 +516,14 @@ class RoomDevice extends Homey.Device {
 
     this.client = null;
     this.log('Room device deleted:', this.getName());
+  }
+
+  /**
+   * Get the last error message (useful for debugging)
+   * @returns The last error message or null if no error occurred
+   */
+  getLastError(): string | null {
+    return this._lastError;
   }
 }
 

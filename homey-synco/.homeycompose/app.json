@@ -27,5 +27,18 @@
   "tags": {
     "en": ["siemens", "synco", "hvac", "heating", "climate", "room controller", "ozw772", "ozw672"],
     "de": ["siemens", "synco", "heizung", "klima", "raumregler", "ozw772", "ozw672"]
-  }
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": ""
+      }
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/homey-synco/issues"
+  },
+  "homeyCommunityTopicId": 0,
+  "source": "https://github.com/your-username/homey-synco",
+  "support": "mailto:developer@example.com"
 }

@@ -1,19 +1,29 @@
+/**
+ * Room Driver for Siemens Synco Living
+ *
+ * @description Handles device pairing and discovery for Synco Living room
+ * thermostats connected via OZW772/OZW672 gateway.
+ */
+
 import Homey from 'homey';
 import { OZW772Client } from '../../lib/OZW772Client';
 import { DEVICE_IDS, DATAPOINT_OFFSETS } from '../../lib/constants';
 import { MenuItem } from '../../lib/types';
 
+/** Login credentials for gateway connection */
 interface LoginCredentials {
   host: string;
   username: string;
   password: string;
 }
 
+/** Device data stored in Homey */
 interface RoomDeviceData {
   id: string;
   roomIndex: number;
 }
 
+/** Device store containing connection details */
 interface RoomDeviceStore {
   host: string;
   username: string;
@@ -24,17 +34,28 @@ interface RoomDeviceStore {
   modeMenuId: string;
 }
 
+/** Device structure for pairing */
 interface PairDevice {
   name: string;
   data: RoomDeviceData;
   store: RoomDeviceStore;
 }
 
+/**
+ * Driver class for Synco Living room thermostats
+ */
 class RoomDriver extends Homey.Driver {
+  /**
+   * Initialize the driver
+   */
   async onInit(): Promise<void> {
     this.log('Room driver initialized');
   }
 
+  /**
+   * Handle device pairing session
+   * @param session - The pairing session
+   */
   async onPair(session: Homey.Driver.PairSession): Promise<void> {
     let credentials: LoginCredentials | null = null;
     let client: OZW772Client | null = null;
@@ -102,6 +123,11 @@ class RoomDriver extends Homey.Driver {
     });
   }
 
+  /**
+   * Discover available rooms from the gateway
+   * @param client - OZW772Client instance to use for discovery
+   * @returns Array of menu items representing rooms
+   */
   async discoverRooms(client: OZW772Client): Promise<MenuItem[]> {
     try {
       const menuTree = await client.getMenuTree(DEVICE_IDS.ROOMS);
@@ -117,6 +143,11 @@ class RoomDriver extends Homey.Driver {
     }
   }
 
+  /**
+   * Create a new OZW772Client instance
+   * @param config - Connection configuration
+   * @returns New OZW772Client instance
+   */
   getClient(config: LoginCredentials): OZW772Client {
     return new OZW772Client(config);
   }
