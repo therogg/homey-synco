@@ -476,7 +476,10 @@
         "measure_temperature",
         "target_temperature",
         "valve_position",
-        "thermostat_mode"
+        "thermostat_mode",
+        "setpoint_comfort",
+        "setpoint_precomfort",
+        "setpoint_economy"
       ],
       "capabilitiesOptions": {
         "target_temperature": {
@@ -569,6 +572,75 @@
     }
   ],
   "capabilities": {
+    "setpoint_comfort": {
+      "type": "number",
+      "title": {
+        "en": "Comfort Setpoint",
+        "de": "Komfort-Sollwert"
+      },
+      "units": {
+        "en": "°C"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Temperature setpoint for comfort mode",
+        "de": "Solltemperatur für Komfort-Modus"
+      },
+      "chartType": "stepLine",
+      "decimals": 1,
+      "min": 20,
+      "max": 35,
+      "step": 0.5,
+      "getable": true,
+      "setable": true,
+      "uiComponent": "thermostat"
+    },
+    "setpoint_economy": {
+      "type": "number",
+      "title": {
+        "en": "Economy Setpoint",
+        "de": "Eco-Sollwert"
+      },
+      "units": {
+        "en": "°C"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Temperature setpoint for economy mode",
+        "de": "Solltemperatur für Eco-Modus"
+      },
+      "chartType": "stepLine",
+      "decimals": 1,
+      "min": 8,
+      "max": 25,
+      "step": 0.5,
+      "getable": true,
+      "setable": true,
+      "uiComponent": "thermostat"
+    },
+    "setpoint_precomfort": {
+      "type": "number",
+      "title": {
+        "en": "Pre-Comfort Setpoint",
+        "de": "Vorkomfort-Sollwert"
+      },
+      "units": {
+        "en": "°C"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Temperature setpoint for pre-comfort mode",
+        "de": "Solltemperatur für Vorkomfort-Modus"
+      },
+      "chartType": "stepLine",
+      "decimals": 1,
+      "min": 16,
+      "max": 30,
+      "step": 0.5,
+      "getable": true,
+      "setable": true,
+      "uiComponent": "thermostat"
+    },
     "thermostat_mode": {
       "type": "enum",
       "title": {

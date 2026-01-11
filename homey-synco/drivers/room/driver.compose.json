@@ -8,7 +8,10 @@
     "measure_temperature",
     "target_temperature",
     "valve_position",
-    "thermostat_mode"
+    "thermostat_mode",
+    "setpoint_comfort",
+    "setpoint_precomfort",
+    "setpoint_economy"
   ],
   "capabilitiesOptions": {
     "target_temperature": {

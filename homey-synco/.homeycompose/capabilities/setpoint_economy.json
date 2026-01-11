@@ -1,0 +1,23 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Economy Setpoint",
+    "de": "Eco-Sollwert"
+  },
+  "units": {
+    "en": "°C"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Temperature setpoint for economy mode",
+    "de": "Solltemperatur für Eco-Modus"
+  },
+  "chartType": "stepLine",
+  "decimals": 1,
+  "min": 8,
+  "max": 25,
+  "step": 0.5,
+  "getable": true,
+  "setable": true,
+  "uiComponent": "thermostat"
+}
