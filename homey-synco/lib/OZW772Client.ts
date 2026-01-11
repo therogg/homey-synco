@@ -406,14 +406,19 @@ export class OZW772Client {
         SessionId: sessionId,
         Id: id,
         Type: type,
-        Value: value,
       };
 
+      // For enumeration types, try sending only EnumValue (some APIs prefer this)
       if (type === DATA_TYPES.ENUMERATION && enumValue !== undefined) {
         params.EnumValue = enumValue;
+        // Also include Value for APIs that require both
+        params.Value = value;
+      } else {
+        params.Value = value;
       }
 
       console.log('Writing datapoint:', id, 'Type:', type, 'Value:', value, 'EnumValue:', enumValue);
+      console.log('Write params:', JSON.stringify(params));
 
       const response = await this.request<WriteDatapointResponse>(
         API_ENDPOINTS.WRITE_DATAPOINT,

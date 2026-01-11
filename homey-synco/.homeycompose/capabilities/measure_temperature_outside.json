@@ -1,0 +1,20 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Outside Temperature",
+    "de": "Aussentemperatur"
+  },
+  "units": {
+    "en": "°C"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Current outside temperature",
+    "de": "Aktuelle Aussentemperatur"
+  },
+  "chartType": "spline",
+  "decimals": 1,
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

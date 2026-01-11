@@ -1,0 +1,45 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Ventilation Stage",
+    "de": "Lüftungsstufe"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Current ventilation stage",
+    "de": "Aktuelle Lüftungsstufe"
+  },
+  "values": [
+    {
+      "id": "off",
+      "title": {
+        "en": "Off",
+        "de": "Aus"
+      }
+    },
+    {
+      "id": "stage1",
+      "title": {
+        "en": "Stage 1",
+        "de": "Stufe 1"
+      }
+    },
+    {
+      "id": "stage2",
+      "title": {
+        "en": "Stage 2",
+        "de": "Stufe 2"
+      }
+    },
+    {
+      "id": "stage3",
+      "title": {
+        "en": "Stage 3",
+        "de": "Stufe 3"
+      }
+    }
+  ],
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

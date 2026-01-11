@@ -1,0 +1,20 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Air Pressure",
+    "de": "Luftdruck"
+  },
+  "units": {
+    "en": "hPa"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Current air pressure",
+    "de": "Aktueller Luftdruck"
+  },
+  "chartType": "spline",
+  "decimals": 0,
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

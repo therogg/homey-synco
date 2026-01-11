@@ -8,7 +8,7 @@
 
 import Homey from 'homey';
 import { OZW772Client, OZW772Error } from '../../lib/OZW772Client';
-import { DATAPOINT_OFFSETS } from '../../lib/constants';
+import { DATAPOINT_OFFSETS, DEFAULTS } from '../../lib/constants';
 
 /** Room device store structure */
 interface RoomStore {
@@ -134,11 +134,15 @@ class RoomDevice extends Homey.Device {
 
     this.registerFlowCards();
 
-    await this.pollData();
+    // Stagger initial poll to prevent gateway overload when multiple devices start
+    const staggerDelay = Math.random() * DEFAULTS.POLL_STAGGER_MAX_MS;
+    this.log(`Staggering initial poll by ${Math.round(staggerDelay / 1000)} seconds`);
 
-    this.startPolling();
-
-    this.log('Room device polling started');
+    this.homey.setTimeout(async () => {
+      await this.pollData();
+      this.startPolling();
+      this.log('Room device polling started');
+    }, staggerDelay);
   }
 
   /**
@@ -260,7 +264,7 @@ class RoomDevice extends Homey.Device {
    */
   private startPolling(): void {
     const settings = this.getSettings() as RoomSettings;
-    const intervalMs = (settings.poll_interval || 60) * 1000;
+    const intervalMs = (settings.poll_interval || (DEFAULTS.POLLING_INTERVAL_MS / 1000)) * 1000;
 
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);

@@ -27,8 +27,9 @@ export const DATA_TYPES = {
 export const DEFAULTS = {
   PORT_HTTP: 80,
   PORT_HTTPS: 443,
-  POLLING_INTERVAL_MS: 60000,
+  POLLING_INTERVAL_MS: 120000,      // 2 minutes to reduce gateway load
   REQUEST_TIMEOUT_MS: 10000,
+  POLL_STAGGER_MAX_MS: 30000,       // Max random delay before first poll (30 seconds)
 } as const;
 
 /**
@@ -82,6 +83,55 @@ export const DATAPOINT_OFFSETS = {
   VALVE_POSITION: 24,      // 5375
   ECONOMY_INCREASE: 25,    // 5376
   SETPOINT_LIMITATION: 26, // 5377
+} as const;
+
+/**
+ * Gateway datapoint IDs for global (non-room-specific) data
+ */
+export const GATEWAY_DATAPOINTS = {
+  OUTSIDE_TEMPERATURE: '4725',
+  AIR_PRESSURE: '4726',
+  VENTILATION_MODE: '5862',       // Stage selection (Auto/Stage1/2/3) - settable
+  VENTILATION_FORCED: '5863',     // Forced ventilation
+  VENTILATION_STATE: '5864',      // Ventilation state
+  VENTILATION_STAGE: '5884',      // Current ventilation stage - read-only
+} as const;
+
+/**
+ * Ventilation mode mapping (API enum values to capability values)
+ * Testing simpler 0-3 mapping for Stage selection datapoint 5862
+ */
+export const VENTILATION_MODE_MAP = {
+  ENUM_TO_MODE: {
+    '0': 'auto',
+    '1': 'stage1',
+    '2': 'stage2',
+    '3': 'stage3',
+  } as Record<string, string>,
+  MODE_TO_ENUM: {
+    auto: '0',
+    stage1: '1',
+    stage2: '2',
+    stage3: '3',
+  } as Record<string, string>,
+  MODE_TO_DISPLAY: {
+    auto: 'Auto',
+    stage1: 'Stage 1',
+    stage2: 'Stage 2',
+    stage3: 'Stage 3',
+  } as Record<string, string>,
+} as const;
+
+/**
+ * Ventilation stage mapping (API enum values to capability values)
+ */
+export const VENTILATION_STAGE_MAP = {
+  ENUM_TO_STAGE: {
+    '0': 'off',
+    '1': 'stage1',
+    '2': 'stage2',
+    '3': 'stage3',
+  } as Record<string, string>,
 } as const;
 
 /**

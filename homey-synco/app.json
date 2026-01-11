@@ -468,6 +468,47 @@
   "drivers": [
     {
       "name": {
+        "en": "Gateway",
+        "de": "Gateway"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_temperature_outside",
+        "measure_pressure",
+        "ventilation_stage",
+        "ventilation_mode"
+      ],
+      "energy": {
+        "approximation": {
+          "usageOn": 0,
+          "usageOff": 0
+        }
+      },
+      "pair": [
+        {
+          "id": "login_credentials"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "prev": "login_credentials",
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "small": "/drivers/gateway/assets/images/small.png",
+        "large": "/drivers/gateway/assets/images/large.png"
+      },
+      "id": "gateway"
+    },
+    {
+      "name": {
         "en": "Room",
         "de": "Raum"
       },
@@ -573,6 +614,46 @@
     }
   ],
   "capabilities": {
+    "measure_pressure": {
+      "type": "number",
+      "title": {
+        "en": "Air Pressure",
+        "de": "Luftdruck"
+      },
+      "units": {
+        "en": "hPa"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Current air pressure",
+        "de": "Aktueller Luftdruck"
+      },
+      "chartType": "spline",
+      "decimals": 0,
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "measure_temperature_outside": {
+      "type": "number",
+      "title": {
+        "en": "Outside Temperature",
+        "de": "Aussentemperatur"
+      },
+      "units": {
+        "en": "°C"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Current outside temperature",
+        "de": "Aktuelle Aussentemperatur"
+      },
+      "chartType": "spline",
+      "decimals": 1,
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
     "setpoint_comfort": {
       "type": "number",
       "title": {
@@ -729,6 +810,96 @@
       "min": 0,
       "max": 100,
       "step": 1
+    },
+    "ventilation_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Ventilation Mode",
+        "de": "Lüftungsmodus"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Ventilation operating mode (read-only)",
+        "de": "Lüftungs-Betriebsmodus (nur Anzeige)"
+      },
+      "values": [
+        {
+          "id": "auto",
+          "title": {
+            "en": "Auto",
+            "de": "Automatik"
+          }
+        },
+        {
+          "id": "stage1",
+          "title": {
+            "en": "Stage 1",
+            "de": "Stufe 1"
+          }
+        },
+        {
+          "id": "stage2",
+          "title": {
+            "en": "Stage 2",
+            "de": "Stufe 2"
+          }
+        },
+        {
+          "id": "stage3",
+          "title": {
+            "en": "Stage 3",
+            "de": "Stufe 3"
+          }
+        }
+      ],
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "ventilation_stage": {
+      "type": "enum",
+      "title": {
+        "en": "Ventilation Stage",
+        "de": "Lüftungsstufe"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Current ventilation stage",
+        "de": "Aktuelle Lüftungsstufe"
+      },
+      "values": [
+        {
+          "id": "off",
+          "title": {
+            "en": "Off",
+            "de": "Aus"
+          }
+        },
+        {
+          "id": "stage1",
+          "title": {
+            "en": "Stage 1",
+            "de": "Stufe 1"
+          }
+        },
+        {
+          "id": "stage2",
+          "title": {
+            "en": "Stage 2",
+            "de": "Stufe 2"
+          }
+        },
+        {
+          "id": "stage3",
+          "title": {
+            "en": "Stage 3",
+            "de": "Stufe 3"
+          }
+        }
+      ],
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
     }
   }
 }

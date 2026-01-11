@@ -1,0 +1,45 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Ventilation Mode",
+    "de": "Lüftungsmodus"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Ventilation operating mode (read-only)",
+    "de": "Lüftungs-Betriebsmodus (nur Anzeige)"
+  },
+  "values": [
+    {
+      "id": "auto",
+      "title": {
+        "en": "Auto",
+        "de": "Automatik"
+      }
+    },
+    {
+      "id": "stage1",
+      "title": {
+        "en": "Stage 1",
+        "de": "Stufe 1"
+      }
+    },
+    {
+      "id": "stage2",
+      "title": {
+        "en": "Stage 2",
+        "de": "Stufe 2"
+      }
+    },
+    {
+      "id": "stage3",
+      "title": {
+        "en": "Stage 3",
+        "de": "Stufe 3"
+      }
+    }
+  ],
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}
