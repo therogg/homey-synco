@@ -5,18 +5,32 @@
   },
   "drivers": {
     "room": {
-      "name": "Room Controller"
+      "name": "Room Controller",
+      "pair": {
+        "login_credentials": {
+          "title": "Connect to OZW Gateway"
+        },
+        "list_devices": {
+          "title": "Select Rooms"
+        }
+      }
     }
   },
   "pair": {
     "login": {
       "title": "Connect to OZW Gateway",
+      "info": "Enter the connection details for your OZW772/OZW672 gateway.",
       "host": "Gateway IP Address",
       "username": "Username",
-      "password": "Password"
+      "password": "Password",
+      "connect": "Connect"
     },
     "list_devices": {
       "title": "Select Rooms"
     }
+  },
+  "errors": {
+    "connection_failed": "Connection failed. Please check your credentials.",
+    "no_rooms_found": "No rooms found on the gateway."
   }
 }

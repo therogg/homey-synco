@@ -5,18 +5,32 @@
   },
   "drivers": {
     "room": {
-      "name": "Raumregler"
+      "name": "Raumregler",
+      "pair": {
+        "login_credentials": {
+          "title": "Mit OZW Gateway verbinden"
+        },
+        "list_devices": {
+          "title": "Räume auswählen"
+        }
+      }
     }
   },
   "pair": {
     "login": {
       "title": "Mit OZW Gateway verbinden",
+      "info": "Geben Sie die Verbindungsdaten für Ihr OZW772/OZW672 Gateway ein.",
       "host": "Gateway IP-Adresse",
       "username": "Benutzername",
-      "password": "Passwort"
+      "password": "Passwort",
+      "connect": "Verbinden"
     },
     "list_devices": {
       "title": "Räume auswählen"
     }
+  },
+  "errors": {
+    "connection_failed": "Verbindung fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.",
+    "no_rooms_found": "Keine Räume auf dem Gateway gefunden."
   }
 }
