@@ -4,6 +4,10 @@
     "en": "Set operating mode",
     "de": "Betriebsmodus setzen"
   },
+  "titleFormatted": {
+    "en": "Set operating mode to [[mode]]",
+    "de": "Setze Betriebsmodus auf [[mode]]"
+  },
   "args": [
     {
       "type": "device",

@@ -8,6 +8,10 @@
     "en": "Triggers when the valve position exceeds the specified threshold",
     "de": "Wird ausgelöst, wenn die Ventilstellung den Schwellwert überschreitet"
   },
+  "titleFormatted": {
+    "en": "Valve opened above [[threshold]] %",
+    "de": "Ventil öffnete über [[threshold]] %"
+  },
   "args": [
     {
       "type": "device",

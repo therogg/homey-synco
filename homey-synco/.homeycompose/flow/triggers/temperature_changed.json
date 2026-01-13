@@ -8,6 +8,10 @@
     "en": "Triggers when the room temperature changes",
     "de": "Wird ausgelöst, wenn sich die Raumtemperatur ändert"
   },
+  "titleFormatted": {
+    "en": "The temperature changed",
+    "de": "Die Temperatur hat sich geändert"
+  },
   "args": [
     {
       "type": "device",

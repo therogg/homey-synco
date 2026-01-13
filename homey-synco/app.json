@@ -77,8 +77,7 @@
     "xlarge": "/assets/images/xlarge.png"
   },
   "author": {
-    "name": "Synco Living Developer",
-    "email": "developer@example.com"
+    "name": "Marco Rogg"
   },
   "brandColor": "#009999",
   "tags": {
@@ -110,11 +109,11 @@
     }
   },
   "bugs": {
-    "url": "https://github.com/your-username/homey-synco/issues"
+    "url": "https://github.com/therogg/homey-synco/issues"
   },
   "homeyCommunityTopicId": 0,
-  "source": "https://github.com/your-username/homey-synco",
-  "support": "mailto:developer@example.com",
+  "source": "https://github.com/therogg/homey-synco",
+  "support": "https://github.com/therogg/homey-synco/issues",
   "flow": {
     "triggers": [
       {
@@ -126,6 +125,10 @@
         "hint": {
           "en": "Triggers when the operating mode changes",
           "de": "Wird ausgelöst, wenn sich der Betriebsmodus ändert"
+        },
+        "titleFormatted": {
+          "en": "The operating mode changed",
+          "de": "Der Betriebsmodus hat sich geändert"
         },
         "args": [
           {
@@ -156,6 +159,10 @@
           "en": "Triggers when the room temperature changes",
           "de": "Wird ausgelöst, wenn sich die Raumtemperatur ändert"
         },
+        "titleFormatted": {
+          "en": "The temperature changed",
+          "de": "Die Temperatur hat sich geändert"
+        },
         "args": [
           {
             "type": "device",
@@ -184,6 +191,10 @@
         "hint": {
           "en": "Triggers when the valve position exceeds the specified threshold",
           "de": "Wird ausgelöst, wenn die Ventilstellung den Schwellwert überschreitet"
+        },
+        "titleFormatted": {
+          "en": "Valve opened above [[threshold]] %",
+          "de": "Ventil öffnete über [[threshold]] %"
         },
         "args": [
           {
@@ -222,6 +233,10 @@
         "title": {
           "en": "Operating mode is",
           "de": "Betriebsmodus ist"
+        },
+        "titleFormatted": {
+          "en": "Operating mode is [[mode]]",
+          "de": "Betriebsmodus ist [[mode]]"
         },
         "args": [
           {
@@ -278,6 +293,10 @@
           "en": "Temperature is above",
           "de": "Temperatur ist über"
         },
+        "titleFormatted": {
+          "en": "Temperature is above [[temperature]] °C",
+          "de": "Temperatur ist über [[temperature]] °C"
+        },
         "args": [
           {
             "type": "device",
@@ -303,6 +322,10 @@
           "en": "Temperature is below",
           "de": "Temperatur ist unter"
         },
+        "titleFormatted": {
+          "en": "Temperature is below [[temperature]] °C",
+          "de": "Temperatur ist unter [[temperature]] °C"
+        },
         "args": [
           {
             "type": "device",
@@ -327,6 +350,10 @@
         "title": {
           "en": "Valve position is above",
           "de": "Ventilstellung ist über"
+        },
+        "titleFormatted": {
+          "en": "Valve position is above [[position]] %",
+          "de": "Ventilstellung ist über [[position]] %"
         },
         "args": [
           {
@@ -354,6 +381,10 @@
         "title": {
           "en": "Set absence mode",
           "de": "Abwesenheitsmodus setzen"
+        },
+        "titleFormatted": {
+          "en": "[[action]] absence mode",
+          "de": "Abwesenheitsmodus [[action]]"
         },
         "args": [
           {
@@ -388,6 +419,10 @@
         "title": {
           "en": "Set operating mode",
           "de": "Betriebsmodus setzen"
+        },
+        "titleFormatted": {
+          "en": "Set operating mode to [[mode]]",
+          "de": "Setze Betriebsmodus auf [[mode]]"
         },
         "args": [
           {
@@ -443,6 +478,10 @@
         "title": {
           "en": "Set temperature",
           "de": "Temperatur setzen"
+        },
+        "titleFormatted": {
+          "en": "Set temperature to [[temperature]] °C",
+          "de": "Setze Temperatur auf [[temperature]] °C"
         },
         "args": [
           {
@@ -503,7 +542,8 @@
       ],
       "images": {
         "small": "/drivers/gateway/assets/images/small.png",
-        "large": "/drivers/gateway/assets/images/large.png"
+        "large": "/drivers/gateway/assets/images/large.png",
+        "xlarge": "/drivers/gateway/assets/images/xlarge.png"
       },
       "id": "gateway"
     },
@@ -555,7 +595,8 @@
       ],
       "images": {
         "small": "/drivers/room/assets/images/small.png",
-        "large": "/drivers/room/assets/images/large.png"
+        "large": "/drivers/room/assets/images/large.png",
+        "xlarge": "/drivers/room/assets/images/xlarge.png"
       },
       "id": "room",
       "settings": [

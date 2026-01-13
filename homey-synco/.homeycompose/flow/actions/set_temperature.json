@@ -4,6 +4,10 @@
     "en": "Set temperature",
     "de": "Temperatur setzen"
   },
+  "titleFormatted": {
+    "en": "Set temperature to [[temperature]] °C",
+    "de": "Setze Temperatur auf [[temperature]] °C"
+  },
   "args": [
     {
       "type": "device",

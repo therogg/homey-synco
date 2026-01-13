@@ -4,6 +4,10 @@
     "en": "Temperature is below",
     "de": "Temperatur ist unter"
   },
+  "titleFormatted": {
+    "en": "Temperature is below [[temperature]] °C",
+    "de": "Temperatur ist unter [[temperature]] °C"
+  },
   "args": [
     {
       "type": "device",

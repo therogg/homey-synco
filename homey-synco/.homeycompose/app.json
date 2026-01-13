@@ -70,8 +70,7 @@
     "xlarge": "/assets/images/xlarge.png"
   },
   "author": {
-    "name": "Synco Living Developer",
-    "email": "developer@example.com"
+    "name": "Marco Rogg"
   },
   "brandColor": "#009999",
   "tags": {
@@ -86,9 +85,9 @@
     }
   },
   "bugs": {
-    "url": "https://github.com/your-username/homey-synco/issues"
+    "url": "https://github.com/therogg/homey-synco/issues"
   },
   "homeyCommunityTopicId": 0,
-  "source": "https://github.com/your-username/homey-synco",
-  "support": "mailto:developer@example.com"
+  "source": "https://github.com/therogg/homey-synco",
+  "support": "https://github.com/therogg/homey-synco/issues"
 }

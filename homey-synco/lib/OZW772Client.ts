@@ -417,15 +417,10 @@ export class OZW772Client {
         params.Value = value;
       }
 
-      console.log('Writing datapoint:', id, 'Type:', type, 'Value:', value, 'EnumValue:', enumValue);
-      console.log('Write params:', JSON.stringify(params));
-
       const response = await this.request<WriteDatapointResponse>(
         API_ENDPOINTS.WRITE_DATAPOINT,
         params
       );
-
-      console.log('Write response:', JSON.stringify(response));
 
       return response.Result?.Success === 'true';
     });

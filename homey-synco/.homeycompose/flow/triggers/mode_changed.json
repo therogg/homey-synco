@@ -8,6 +8,10 @@
     "en": "Triggers when the operating mode changes",
     "de": "Wird ausgelöst, wenn sich der Betriebsmodus ändert"
   },
+  "titleFormatted": {
+    "en": "The operating mode changed",
+    "de": "Der Betriebsmodus hat sich geändert"
+  },
   "args": [
     {
       "type": "device",

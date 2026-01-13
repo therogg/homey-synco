@@ -4,6 +4,17 @@
     "description": "Steuerung von Siemens Synco Living Raumreglern über OZW772/OZW672 Gateway"
   },
   "drivers": {
+    "gateway": {
+      "name": "Gateway",
+      "pair": {
+        "login_credentials": {
+          "title": "Mit OZW Gateway verbinden"
+        },
+        "list_devices": {
+          "title": "Gateway auswählen"
+        }
+      }
+    },
     "room": {
       "name": "Raumregler",
       "pair": {
@@ -63,21 +74,21 @@
     "triggers": {
       "temperature_changed": {
         "title": "Temperatur hat sich geändert",
-        "titleFormatted": "Die Temperatur von [[device]] hat sich geändert",
+        "titleFormatted": "Die Temperatur hat sich geändert",
         "tokens": {
           "temperature": "Temperatur"
         }
       },
       "mode_changed": {
         "title": "Betriebsmodus hat sich geändert",
-        "titleFormatted": "Der Betriebsmodus von [[device]] hat sich geändert",
+        "titleFormatted": "Der Betriebsmodus hat sich geändert",
         "tokens": {
           "mode": "Modus"
         }
       },
       "valve_opened": {
         "title": "Ventil über Schwellwert geöffnet",
-        "titleFormatted": "Das Ventil von [[device]] öffnete über [[threshold]] %",
+        "titleFormatted": "Ventil öffnete über [[threshold]] %",
         "args": {
           "threshold": "Schwellwert %"
         },
@@ -89,21 +100,21 @@
     "conditions": {
       "temperature_above": {
         "title": "Temperatur ist über",
-        "titleFormatted": "Temperatur von [[device]] ist über [[temperature]] °C",
+        "titleFormatted": "Temperatur ist über [[temperature]] °C",
         "args": {
           "temperature": "Temperatur"
         }
       },
       "temperature_below": {
         "title": "Temperatur ist unter",
-        "titleFormatted": "Temperatur von [[device]] ist unter [[temperature]] °C",
+        "titleFormatted": "Temperatur ist unter [[temperature]] °C",
         "args": {
           "temperature": "Temperatur"
         }
       },
       "mode_is": {
         "title": "Betriebsmodus ist",
-        "titleFormatted": "Betriebsmodus von [[device]] ist [[mode]]",
+        "titleFormatted": "Betriebsmodus ist [[mode]]",
         "args": {
           "mode": {
             "auto": "Automatik",
@@ -116,7 +127,7 @@
       },
       "valve_above": {
         "title": "Ventilstellung ist über",
-        "titleFormatted": "Ventilstellung von [[device]] ist über [[position]] %",
+        "titleFormatted": "Ventilstellung ist über [[position]] %",
         "args": {
           "position": "Stellung %"
         }
@@ -125,14 +136,14 @@
     "actions": {
       "set_temperature": {
         "title": "Temperatur setzen",
-        "titleFormatted": "Setze Temperatur von [[device]] auf [[temperature]] °C",
+        "titleFormatted": "Setze Temperatur auf [[temperature]] °C",
         "args": {
           "temperature": "Temperatur"
         }
       },
       "set_mode": {
         "title": "Betriebsmodus setzen",
-        "titleFormatted": "Setze Betriebsmodus von [[device]] auf [[mode]]",
+        "titleFormatted": "Setze Betriebsmodus auf [[mode]]",
         "args": {
           "mode": {
             "auto": "Automatik",
@@ -145,7 +156,7 @@
       },
       "set_absence": {
         "title": "Abwesenheitsmodus setzen",
-        "titleFormatted": "Abwesenheitsmodus für [[device]] [[action]]",
+        "titleFormatted": "Abwesenheitsmodus [[action]]",
         "args": {
           "action": {
             "enable": "Aktivieren",

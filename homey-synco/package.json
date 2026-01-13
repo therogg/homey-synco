@@ -9,10 +9,10 @@
     "test": "echo \"No tests configured yet\"",
     "test:api": "npx ts-node lib/__tests__/api-test.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.8",
     "@types/node": "^20.10.0",
+    "sharp": "^0.34.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }

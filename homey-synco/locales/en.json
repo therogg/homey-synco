@@ -4,6 +4,17 @@
     "description": "Control Siemens Synco Living room controllers via OZW772/OZW672 gateway"
   },
   "drivers": {
+    "gateway": {
+      "name": "Gateway",
+      "pair": {
+        "login_credentials": {
+          "title": "Connect to OZW Gateway"
+        },
+        "list_devices": {
+          "title": "Select Gateway"
+        }
+      }
+    },
     "room": {
       "name": "Room Controller",
       "pair": {
@@ -63,21 +74,21 @@
     "triggers": {
       "temperature_changed": {
         "title": "Temperature changed",
-        "titleFormatted": "The temperature of [[device]] changed",
+        "titleFormatted": "The temperature changed",
         "tokens": {
           "temperature": "Temperature"
         }
       },
       "mode_changed": {
         "title": "Operating mode changed",
-        "titleFormatted": "The operating mode of [[device]] changed",
+        "titleFormatted": "The operating mode changed",
         "tokens": {
           "mode": "Mode"
         }
       },
       "valve_opened": {
         "title": "Valve opened above threshold",
-        "titleFormatted": "The valve of [[device]] opened above [[threshold]] %",
+        "titleFormatted": "Valve opened above [[threshold]] %",
         "args": {
           "threshold": "Threshold %"
         },
@@ -89,21 +100,21 @@
     "conditions": {
       "temperature_above": {
         "title": "Temperature is above",
-        "titleFormatted": "Temperature of [[device]] is above [[temperature]] °C",
+        "titleFormatted": "Temperature is above [[temperature]] °C",
         "args": {
           "temperature": "Temperature"
         }
       },
       "temperature_below": {
         "title": "Temperature is below",
-        "titleFormatted": "Temperature of [[device]] is below [[temperature]] °C",
+        "titleFormatted": "Temperature is below [[temperature]] °C",
         "args": {
           "temperature": "Temperature"
         }
       },
       "mode_is": {
         "title": "Operating mode is",
-        "titleFormatted": "Operating mode of [[device]] is [[mode]]",
+        "titleFormatted": "Operating mode is [[mode]]",
         "args": {
           "mode": {
             "auto": "Automatic",
@@ -116,7 +127,7 @@
       },
       "valve_above": {
         "title": "Valve position is above",
-        "titleFormatted": "Valve position of [[device]] is above [[position]] %",
+        "titleFormatted": "Valve position is above [[position]] %",
         "args": {
           "position": "Position %"
         }
@@ -125,14 +136,14 @@
     "actions": {
       "set_temperature": {
         "title": "Set temperature",
-        "titleFormatted": "Set temperature of [[device]] to [[temperature]] °C",
+        "titleFormatted": "Set temperature to [[temperature]] °C",
         "args": {
           "temperature": "Temperature"
         }
       },
       "set_mode": {
         "title": "Set operating mode",
-        "titleFormatted": "Set operating mode of [[device]] to [[mode]]",
+        "titleFormatted": "Set operating mode to [[mode]]",
         "args": {
           "mode": {
             "auto": "Automatic",
@@ -145,7 +156,7 @@
       },
       "set_absence": {
         "title": "Set absence mode",
-        "titleFormatted": "[[action]] absence mode for [[device]]",
+        "titleFormatted": "[[action]] absence mode",
         "args": {
           "action": {
             "enable": "Enable",
