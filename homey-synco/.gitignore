@@ -2,6 +2,10 @@ node_modules/
 *.log
 .DS_Store
 
+# Development artifacts
+explore-gateway.ts
+.env
+.env.local
 
 # Added by Homey CLI
 /.homeybuild/

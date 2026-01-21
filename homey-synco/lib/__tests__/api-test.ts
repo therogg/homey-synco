@@ -8,13 +8,20 @@
 import { OZW772Client } from '../OZW772Client';
 import { DEVICE_IDS, DATAPOINT_OFFSETS } from '../constants';
 
-// Test configuration - these should match your actual gateway
+// Test configuration - set via environment variables
+// Usage: OZW_HOST=192.168.1.x OZW_USER=admin OZW_PASS=secret npm run test:api
 const TEST_CONFIG = {
-  host: '192.168.1.12',
-  username: 'Administrator',
-  password: 'Hossaman1976.',
-  useHttps: false,
+  host: process.env.OZW_HOST || '',
+  username: process.env.OZW_USER || 'Administrator',
+  password: process.env.OZW_PASS || '',
+  useHttps: process.env.OZW_HTTPS === 'true',
 };
+
+if (!TEST_CONFIG.host || !TEST_CONFIG.password) {
+  console.error('Error: OZW_HOST and OZW_PASS environment variables are required');
+  console.error('Usage: OZW_HOST=192.168.1.x OZW_PASS=secret npm run test:api');
+  process.exit(1);
+}
 
 // Wohnzimmer room configuration
 const WOHNZIMMER = {
