@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Siemens Synco Living",
-    "description": "Control Siemens Synco Living room controllers via OZW772/OZW672 gateway"
+    "description": "Smart building automation for your home - control room temperature, ventilation, and comfort"
   },
   "drivers": {
     "gateway": {

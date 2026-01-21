@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Siemens Synco Living",
-    "description": "Steuerung von Siemens Synco Living Raumreglern über OZW772/OZW672 Gateway"
+    "description": "Intelligente Gebäudeautomation für Ihr Zuhause - Raumtemperatur, Lüftung und Komfort steuern"
   },
   "drivers": {
     "gateway": {

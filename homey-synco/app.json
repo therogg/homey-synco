@@ -12,8 +12,8 @@
     "de": "Siemens Synco Living"
   },
   "description": {
-    "en": "Control Siemens Synco Living room controllers via OZW772/OZW672 gateway",
-    "de": "Steuerung von Siemens Synco Living Raumreglern über OZW772/OZW672 Gateway"
+    "en": "Smart building automation for your home - control room temperature, ventilation, and comfort",
+    "de": "Intelligente Gebäudeautomation für Ihr Zuhause - Raumtemperatur, Lüftung und Komfort steuern"
   },
   "category": [
     "climate"
