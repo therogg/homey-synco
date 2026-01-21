@@ -552,7 +552,7 @@
         "en": "Room",
         "de": "Raum"
       },
-      "class": "thermostat",
+      "class": "heater",
       "capabilities": [
         "measure_temperature",
         "target_temperature",
@@ -681,6 +681,7 @@
         "en": "Outside Temperature",
         "de": "Aussentemperatur"
       },
+      "icon": "/assets/icons/temperature_outside.svg",
       "units": {
         "en": "°C"
       },
@@ -858,6 +859,7 @@
         "en": "Ventilation Mode",
         "de": "Lüftungsmodus"
       },
+      "icon": "/assets/icons/ventilation.svg",
       "insights": true,
       "desc": {
         "en": "Ventilation operating mode (read-only)",
@@ -903,6 +905,7 @@
         "en": "Ventilation Stage",
         "de": "Lüftungsstufe"
       },
+      "icon": "/assets/icons/ventilation.svg",
       "insights": true,
       "desc": {
         "en": "Current ventilation stage",

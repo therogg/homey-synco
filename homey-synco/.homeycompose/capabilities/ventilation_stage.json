@@ -4,6 +4,7 @@
     "en": "Ventilation Stage",
     "de": "Lüftungsstufe"
   },
+  "icon": "/assets/icons/ventilation.svg",
   "insights": true,
   "desc": {
     "en": "Current ventilation stage",

@@ -4,6 +4,7 @@
     "en": "Outside Temperature",
     "de": "Aussentemperatur"
   },
+  "icon": "/assets/icons/temperature_outside.svg",
   "units": {
     "en": "°C"
   },

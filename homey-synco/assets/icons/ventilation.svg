@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Fan/Ventilation icon -->
+  <!-- Center hub -->
+  <circle cx="32" cy="32" r="6" fill="black"/>
+
+  <!-- Fan blades -->
+  <path d="M32 26 C32 18, 40 12, 48 16 C44 22, 38 26, 32 26" fill="black"/>
+  <path d="M38 32 C46 32, 52 40, 48 48 C42 44, 38 38, 38 32" fill="black"/>
+  <path d="M32 38 C32 46, 24 52, 16 48 C20 42, 26 38, 32 38" fill="black"/>
+  <path d="M26 32 C18 32, 12 24, 16 16 C22 20, 26 26, 26 32" fill="black"/>
+
+  <!-- Outer circle -->
+  <circle cx="32" cy="32" r="28" fill="none" stroke="black" stroke-width="2"/>
+</svg>

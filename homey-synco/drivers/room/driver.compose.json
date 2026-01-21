@@ -3,7 +3,7 @@
     "en": "Room",
     "de": "Raum"
   },
-  "class": "thermostat",
+  "class": "heater",
   "capabilities": [
     "measure_temperature",
     "target_temperature",

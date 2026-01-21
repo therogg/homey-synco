@@ -4,6 +4,7 @@
     "en": "Ventilation Mode",
     "de": "Lüftungsmodus"
   },
+  "icon": "/assets/icons/ventilation.svg",
   "insights": true,
   "desc": {
     "en": "Ventilation operating mode (read-only)",
