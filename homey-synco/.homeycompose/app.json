@@ -1,6 +1,6 @@
 {
   "id": "com.siemens.synco",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": ["local"],
@@ -13,7 +13,7 @@
     "de": "Intelligente Gebäudeautomation für Ihr Zuhause - Raumtemperatur, Lüftung und Komfort steuern"
   },
   "category": ["climate"],
-  "permissions": ["homey:manager:api"],
+  "permissions": [],
   "settings": [
     {
       "type": "group",
