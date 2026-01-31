@@ -148,6 +148,16 @@ export class OZW772Client {
                 false
               ));
             }
+          } else if (res.statusCode === 301 || res.statusCode === 302) {
+            // Gateway is redirecting - likely HTTP to HTTPS
+            const location = res.headers.location;
+            reject(new OZW772Error(
+              location?.startsWith('https')
+                ? 'Gateway requires HTTPS connection'
+                : `Gateway redirected to: ${location}`,
+              'HTTPS_REQUIRED',
+              false
+            ));
           } else if (res.statusCode === 401 || res.statusCode === 403) {
             reject(new OZW772Error(
               'Authentication failed - check username and password',
@@ -539,5 +549,31 @@ export class OZW772Client {
       );
       return response;
     });
+  }
+
+  /**
+   * Create a client and attempt login, auto-detecting HTTPS if needed
+   * First tries HTTP, falls back to HTTPS if gateway redirects
+   * @param config - Configuration without useHttps specified
+   * @returns Object with client instance and whether HTTPS was used
+   */
+  static async createWithAutoHttps(
+    config: Omit<OZW772Config, 'useHttps'>
+  ): Promise<{ client: OZW772Client; useHttps: boolean }> {
+    // First try HTTP
+    const httpClient = new OZW772Client({ ...config, useHttps: false });
+
+    try {
+      await httpClient.login();
+      return { client: httpClient, useHttps: false };
+    } catch (error) {
+      if (error instanceof OZW772Error && error.code === 'HTTPS_REQUIRED') {
+        // Gateway requires HTTPS, retry with HTTPS
+        const httpsClient = new OZW772Client({ ...config, useHttps: true });
+        await httpsClient.login();
+        return { client: httpsClient, useHttps: true };
+      }
+      throw error;
+    }
   }
 }

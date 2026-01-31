@@ -49,6 +49,7 @@
       "host": "Gateway IP Address",
       "username": "Username",
       "password": "Password",
+      "useHttps": "Use HTTPS (required for newer gateway firmware)",
       "connect": "Connect"
     },
     "list_devices": {

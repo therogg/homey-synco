@@ -19,6 +19,7 @@ interface GatewayStore {
   host: string;
   username: string;
   password: string;
+  useHttps?: boolean;
 }
 
 /** Gateway device settings structure */
@@ -66,6 +67,7 @@ class GatewayDevice extends Homey.Device {
       host: store.host,
       username: store.username,
       password: store.password,
+      useHttps: store.useHttps,
     });
 
     // Ensure all capabilities exist
@@ -257,6 +259,8 @@ class GatewayDevice extends Homey.Device {
           return 'Authentication failed';
         case 'ENOTFOUND':
           return 'Gateway not found';
+        case 'HTTPS_REQUIRED':
+          return 'Gateway requires HTTPS - re-pair device';
         default:
           return 'Connection error';
       }

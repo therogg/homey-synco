@@ -14,6 +14,7 @@ interface LoginCredentials {
   host: string;
   username: string;
   password: string;
+  useHttps?: boolean;
 }
 
 /** Device data stored in Homey */
@@ -26,6 +27,7 @@ interface GatewayDeviceStore {
   host: string;
   username: string;
   password: string;
+  useHttps?: boolean;
 }
 
 /** Device structure for pairing */
@@ -54,23 +56,43 @@ class GatewayDriver extends Homey.Driver {
     let client: OZW772Client | null = null;
 
     session.setHandler('login', async (data: LoginCredentials): Promise<boolean | string> => {
-      this.log('Attempting login to:', data.host);
+      this.log('Attempting login to:', data.host, 'useHttps:', data.useHttps);
 
       try {
-        client = new OZW772Client({
-          host: data.host,
-          username: data.username,
-          password: data.password,
-        });
+        let useHttps = data.useHttps || false;
 
-        await client.login();
-        credentials = data;
-        this.log('Login successful');
+        if (useHttps) {
+          // User explicitly requested HTTPS
+          client = new OZW772Client({
+            host: data.host,
+            username: data.username,
+            password: data.password,
+            useHttps: true,
+          });
+          await client.login();
+        } else {
+          // Try HTTP first, auto-detect HTTPS if gateway requires it
+          const result = await OZW772Client.createWithAutoHttps({
+            host: data.host,
+            username: data.username,
+            password: data.password,
+          });
+          client = result.client;
+          useHttps = result.useHttps;
+
+          if (result.useHttps) {
+            this.log('Auto-detected HTTPS requirement');
+          }
+        }
+
+        credentials = { ...data, useHttps };
+        this.log('Login successful, useHttps:', useHttps);
 
         // Save credentials to app settings for next time
         await this.homey.settings.set('gateway_host', data.host);
         await this.homey.settings.set('gateway_username', data.username);
         await this.homey.settings.set('gateway_password', data.password);
+        await this.homey.settings.set('gateway_use_https', useHttps);
         this.log('Credentials saved to app settings');
 
         return true;
@@ -104,6 +126,7 @@ class GatewayDriver extends Homey.Driver {
             host: credentials.host,
             username: credentials.username,
             password: credentials.password,
+            useHttps: credentials.useHttps,
           },
         },
       ];

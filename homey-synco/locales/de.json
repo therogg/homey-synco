@@ -49,6 +49,7 @@
       "host": "Gateway IP-Adresse",
       "username": "Benutzername",
       "password": "Passwort",
+      "useHttps": "HTTPS verwenden (erforderlich für neuere Gateway-Firmware)",
       "connect": "Verbinden"
     },
     "list_devices": {
