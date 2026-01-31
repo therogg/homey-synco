@@ -2,5 +2,13 @@
   "1.0.0": {
     "en": "Initial release with support for OZW772/OZW672 gateways and room controllers",
     "de": "Erstveröffentlichung mit Unterstützung für OZW772/OZW672 Gateways und Raumregler"
+  },
+  "1.0.1": {
+    "en": "App Store Compliance",
+    "de": "App Store Konformität"
+  },
+  "1.0.2": {
+    "en": "Added HTTPS support for newer gateway versions",
+    "de": "HTTPS-Unterstützung für neuere Gateway-Versionen hinzugefügt"
   }
 }
