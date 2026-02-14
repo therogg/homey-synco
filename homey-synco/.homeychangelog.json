@@ -21,5 +21,9 @@
   "1.1.2": {
     "en": "Fixed room discovery — datapoint types are now read individually when the menu tree doesn't include type information.",
     "de": "Raumerkennung korrigiert — Datenpunkt-Typen werden nun einzeln gelesen, wenn der Menübaum keine Typinformationen enthält."
+  },
+  "1.1.3": {
+    "en": "Complete rewrite of room and gateway discovery based on actual API behavior. Rooms and all datapoints are now reliably detected.",
+    "de": "Komplette Neuentwicklung der Raum- und Gateway-Erkennung basierend auf dem tatsächlichen API-Verhalten. Räume und alle Datenpunkte werden nun zuverlässig erkannt."
   }
 }
