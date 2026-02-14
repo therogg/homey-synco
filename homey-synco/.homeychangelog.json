@@ -17,5 +17,9 @@
   "1.1.0": {
     "en": "Dynamic menu tree discovery — rooms and datapoints are now detected automatically during pairing, supporting all controller variants (QAX910-DE, QAX910-EN, etc.). Improved HTTPS auto-detection for gateways with HTTP disabled.",
     "de": "Dynamische Menu-Tree-Erkennung — Räume und Datenpunkte werden beim Pairing automatisch erkannt und unterstützen alle Controller-Varianten (QAX910-DE, QAX910-EN, etc.). Verbesserte HTTPS-Erkennung für Gateways mit deaktiviertem HTTP."
+  },
+  "1.1.2": {
+    "en": "Fixed room discovery — datapoint types are now read individually when the menu tree doesn't include type information.",
+    "de": "Raumerkennung korrigiert — Datenpunkt-Typen werden nun einzeln gelesen, wenn der Menübaum keine Typinformationen enthält."
   }
 }
