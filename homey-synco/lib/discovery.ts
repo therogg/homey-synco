@@ -2,6 +2,10 @@
  * Dynamic menu tree discovery for OZW772/OZW672 gateways.
  * Traverses the menu tree to find rooms and gateway datapoints
  * regardless of controller variant or language.
+ *
+ * Classification uses datapoint Type/Unit/WriteAccess from the API.
+ * If the menu tree listing doesn't include Type/Unit, the discovery
+ * reads individual datapoints to determine their types.
  */
 
 import { OZW772Client } from './OZW772Client';
@@ -15,13 +19,24 @@ import {
 } from './types';
 
 const MAX_DEPTH = 5;
-const MIN_ROOM_CELSIUS_RW = 2;
+const MIN_ROOM_DATAPOINTS = 5;
 
 type LogFn = (...args: unknown[]) => void;
 
 interface MenuNode {
   menuItems: MenuItem[];
   datapointItems: DatapointItem[];
+}
+
+interface IndexedRole {
+  index: number;
+  role: keyof RoomDatapointMap;
+}
+
+interface RoomTemplate {
+  directMap: IndexedRole[];
+  stateMenuIndex: number;
+  stateMap: IndexedRole[];
 }
 
 async function getNode(client: OZW772Client, parentId?: string): Promise<MenuNode> {
@@ -32,132 +47,194 @@ async function getNode(client: OZW772Client, parentId?: string): Promise<MenuNod
   };
 }
 
+function hasSub(mi: MenuItem): boolean {
+  const v = mi.HasSubMenu;
+  return v === 'true' || v === 'True' || v === '1';
+}
+
 function isCelsius(dp: DatapointItem): boolean {
-  return dp.Type === 'Numeric' && (dp.Unit?.includes('°C') || dp.Unit?.includes('°C') || false);
+  return dp.Type === 'Numeric' && (dp.Unit?.includes('°') ?? false);
 }
 
 function isPercent(dp: DatapointItem): boolean {
-  return dp.Type === 'Numeric' && (dp.Unit?.includes('%') || false);
+  return dp.Type === 'Numeric' && (dp.Unit?.includes('%') ?? false);
 }
 
 function isPressure(dp: DatapointItem): boolean {
-  return dp.Type === 'Numeric' && (dp.Unit?.includes('hPa') || dp.Unit?.includes('mbar') || false);
+  if (dp.Type !== 'Numeric') return false;
+  const u = dp.Unit || '';
+  return u.includes('hPa') || u.includes('mbar');
 }
 
 function isWritable(dp: DatapointItem): boolean {
-  return dp.WriteAccess === 'true';
+  const v = dp.WriteAccess;
+  return v === 'true' || v === 'True' || v === '1';
 }
 
 function isEnum(dp: DatapointItem): boolean {
   return dp.Type === 'Enumeration';
 }
 
-/**
- * Check if a menu node has the signature of a room:
- * multiple °C RW datapoints, at least one Enumeration, and at least one sub-menu (state).
- */
-function isRoomSignature(node: MenuNode): boolean {
-  let celsiusRW = 0;
-  let enumerations = 0;
-  let hasSubMenu = false;
+// ---- Enrichment: read datapoints to get Type/Unit when menu tree omits them ----
 
-  for (const dp of node.datapointItems) {
-    if (isCelsius(dp) && isWritable(dp)) celsiusRW++;
-    if (isEnum(dp)) enumerations++;
-  }
-  for (const mi of node.menuItems) {
-    if (mi.HasSubMenu === 'true') hasSubMenu = true;
-  }
+async function enrichDatapoints(
+  client: OZW772Client,
+  items: DatapointItem[],
+  log: LogFn,
+): Promise<DatapointItem[]> {
+  if (items.length === 0 || items[0].Type) return items;
 
-  return celsiusRW >= MIN_ROOM_CELSIUS_RW && enumerations >= 1 && hasSubMenu;
+  log(`Reading ${items.length} datapoints for type info...`);
+  const enriched: DatapointItem[] = [];
+  for (const dp of items) {
+    try {
+      const value = await client.readDatapoint(dp.Id);
+      enriched.push({ ...dp, Type: value.Type, Unit: value.Unit });
+    } catch {
+      enriched.push(dp);
+    }
+  }
+  return enriched;
 }
 
-/**
- * Check if a node's children are rooms by sampling the first sub-menu child.
- */
+// ---- Room signature check (structural, no Type/Unit needed) ----
+
+function isRoomSignature(node: MenuNode): boolean {
+  return node.datapointItems.length >= MIN_ROOM_DATAPOINTS
+    && node.menuItems.some(mi => hasSub(mi));
+}
+
 async function checkIfRoomsContainer(
   client: OZW772Client,
   node: MenuNode,
+  log: LogFn,
 ): Promise<boolean> {
-  const firstChild = node.menuItems[0];
-  if (!firstChild || firstChild.HasSubMenu !== 'true') return false;
+  const subMenuChildren = node.menuItems.filter(mi => hasSub(mi));
+  if (subMenuChildren.length < 2) return false;
 
   try {
-    const childNode = await getNode(client, firstChild.Id);
-    return isRoomSignature(childNode);
+    const childNode = await getNode(client, subMenuChildren[0].Id);
+    const match = isRoomSignature(childNode);
+    if (match) {
+      log(`Candidate rooms container: first child "${subMenuChildren[0].Text?.Long || subMenuChildren[0].Text?.Short}" matches room signature`);
+    }
+    return match;
   } catch {
     return false;
   }
 }
 
+// ---- Room classification ----
+
+function classifyDirectDatapoints(
+  items: DatapointItem[],
+  datapoints: RoomDatapointMap,
+): IndexedRole[] {
+  const map: IndexedRole[] = [];
+
+  const celsiusRW: Array<{ dp: DatapointItem; idx: number }> = [];
+  const enumRW: Array<{ dp: DatapointItem; idx: number }> = [];
+  const enumRO: Array<{ dp: DatapointItem; idx: number }> = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const dp = items[i];
+    if (isCelsius(dp) && isWritable(dp)) celsiusRW.push({ dp, idx: i });
+    else if (isEnum(dp) && isWritable(dp)) enumRW.push({ dp, idx: i });
+    else if (isEnum(dp) && !isWritable(dp)) enumRO.push({ dp, idx: i });
+  }
+
+  const setpoints: Array<keyof RoomDatapointMap> = [
+    'comfortSetpoint', 'precomfortSetpoint', 'economySetpoint', 'protectionSetpoint',
+  ];
+  for (let i = 0; i < Math.min(celsiusRW.length, setpoints.length); i++) {
+    datapoints[setpoints[i]] = celsiusRW[i].dp.Id;
+    map.push({ index: celsiusRW[i].idx, role: setpoints[i] });
+  }
+
+  if (enumRW.length >= 1) {
+    datapoints.modePreselection = enumRW[0].dp.Id;
+    map.push({ index: enumRW[0].idx, role: 'modePreselection' });
+  }
+  if (enumRW.length >= 2) {
+    datapoints.absenceMode = enumRW[1].dp.Id;
+    map.push({ index: enumRW[1].idx, role: 'absenceMode' });
+  }
+  if (enumRO.length >= 1) {
+    datapoints.modeState = enumRO[0].dp.Id;
+    map.push({ index: enumRO[0].idx, role: 'modeState' });
+  }
+
+  return map;
+}
+
+function classifyStateDatapoints(
+  items: DatapointItem[],
+  datapoints: RoomDatapointMap,
+): IndexedRole[] {
+  const map: IndexedRole[] = [];
+
+  const celsiusRO: Array<{ dp: DatapointItem; idx: number }> = [];
+  let percentRO: { dp: DatapointItem; idx: number } | null = null;
+
+  for (let i = 0; i < items.length; i++) {
+    const dp = items[i];
+    if (isCelsius(dp) && !isWritable(dp)) celsiusRO.push({ dp, idx: i });
+    else if (isPercent(dp) && !isWritable(dp) && !percentRO) percentRO = { dp, idx: i };
+  }
+
+  if (celsiusRO.length >= 1) {
+    datapoints.actualTemp = celsiusRO[0].dp.Id;
+    map.push({ index: celsiusRO[0].idx, role: 'actualTemp' });
+  }
+  if (celsiusRO.length >= 2) {
+    datapoints.currentSetpoint = celsiusRO[1].dp.Id;
+    map.push({ index: celsiusRO[1].idx, role: 'currentSetpoint' });
+  }
+  if (percentRO) {
+    datapoints.valvePosition = percentRO.dp.Id;
+    map.push({ index: percentRO.idx, role: 'valvePosition' });
+  }
+
+  return map;
+}
+
 /**
- * Classify a room's datapoints by type, unit, and write access.
+ * Fully classify a room — enriches datapoints if needed, builds a position template.
  */
-async function classifyRoom(
+async function classifyRoomFull(
   client: OZW772Client,
   menuItem: MenuItem,
   log: LogFn,
-): Promise<DiscoveredRoom | null> {
+): Promise<{ room: DiscoveredRoom; template: RoomTemplate } | null> {
   try {
     const node = await getNode(client, menuItem.Id);
     const datapoints: RoomDatapointMap = {};
 
-    const celsiusRW: DatapointItem[] = [];
-    const enumRW: DatapointItem[] = [];
-    const enumRO: DatapointItem[] = [];
+    const items = await enrichDatapoints(client, node.datapointItems, log);
+    const directMap = classifyDirectDatapoints(items, datapoints);
 
-    for (const dp of node.datapointItems) {
-      if (isCelsius(dp) && isWritable(dp)) {
-        celsiusRW.push(dp);
-      } else if (isEnum(dp) && isWritable(dp)) {
-        enumRW.push(dp);
-      } else if (isEnum(dp) && !isWritable(dp)) {
-        enumRO.push(dp);
-      }
-    }
+    let stateMenuIndex = -1;
+    let stateMap: IndexedRole[] = [];
 
-    // °C RW setpoints in order: comfort, precomfort, economy, protection
-    if (celsiusRW.length >= 1) datapoints.comfortSetpoint = celsiusRW[0].Id;
-    if (celsiusRW.length >= 2) datapoints.precomfortSetpoint = celsiusRW[1].Id;
-    if (celsiusRW.length >= 3) datapoints.economySetpoint = celsiusRW[2].Id;
-    if (celsiusRW.length >= 4) datapoints.protectionSetpoint = celsiusRW[3].Id;
+    for (let i = 0; i < node.menuItems.length; i++) {
+      if (hasSub(node.menuItems[i])) {
+        stateMenuIndex = i;
+        const stateNode = await getNode(client, node.menuItems[i].Id);
+        datapoints.stateMenuId = node.menuItems[i].Id;
 
-    // Enumeration RW: 1st = modePreselection, 2nd = absenceMode
-    if (enumRW.length >= 1) datapoints.modePreselection = enumRW[0].Id;
-    if (enumRW.length >= 2) datapoints.absenceMode = enumRW[1].Id;
-
-    // Enumeration RO: 1st = modeState
-    if (enumRO.length >= 1) datapoints.modeState = enumRO[0].Id;
-
-    // State sub-menu: first sub-menu child that has RO °C and % datapoints
-    for (const mi of node.menuItems) {
-      if (mi.HasSubMenu === 'true') {
-        const stateNode = await getNode(client, mi.Id);
-        datapoints.stateMenuId = mi.Id;
-
-        const celsiusRO: DatapointItem[] = [];
-        let percentRO: DatapointItem | null = null;
-
-        for (const dp of stateNode.datapointItems) {
-          if (isCelsius(dp) && !isWritable(dp)) {
-            celsiusRO.push(dp);
-          } else if (isPercent(dp) && !isWritable(dp)) {
-            percentRO = dp;
-          }
-        }
-
-        // 1st °C RO = actualTemp, 2nd °C RO = currentSetpoint
-        if (celsiusRO.length >= 1) datapoints.actualTemp = celsiusRO[0].Id;
-        if (celsiusRO.length >= 2) datapoints.currentSetpoint = celsiusRO[1].Id;
-        if (percentRO) datapoints.valvePosition = percentRO.Id;
+        const stateItems = await enrichDatapoints(client, stateNode.datapointItems, log);
+        stateMap = classifyStateDatapoints(stateItems, datapoints);
         break;
       }
     }
 
     const name = menuItem.Text.Long || menuItem.Text.Short || `Room ${menuItem.Id}`;
-    log(`Discovered room "${name}": ${JSON.stringify(datapoints)}`);
+    log(`Classified room "${name}": ${JSON.stringify(datapoints)}`);
 
-    return { menuId: menuItem.Id, name, datapoints };
+    return {
+      room: { menuId: menuItem.Id, name, datapoints },
+      template: { directMap, stateMenuIndex, stateMap },
+    };
   } catch (error) {
     log(`Failed to classify room ${menuItem.Id}:`, error);
     return null;
@@ -165,64 +242,139 @@ async function classifyRoom(
 }
 
 /**
- * Collect gateway-level datapoints from a non-room node.
+ * Classify a room using a position template from the first room — no reads needed.
  */
-function collectGatewayDatapoints(
-  datapointItems: DatapointItem[],
-  gw: GatewayDatapointMap,
+async function classifyRoomByTemplate(
+  client: OZW772Client,
+  menuItem: MenuItem,
+  tmpl: RoomTemplate,
   log: LogFn,
-): void {
-  for (const dp of datapointItems) {
-    if (isPressure(dp) && !gw.airPressure) {
-      gw.airPressure = dp.Id;
-      log(`Found air pressure: ${dp.Id}`);
-    } else if (isCelsius(dp) && !isWritable(dp) && !gw.outsideTemperature) {
-      gw.outsideTemperature = dp.Id;
-      log(`Found outside temperature: ${dp.Id}`);
-    } else if (isEnum(dp) && isWritable(dp) && !gw.ventilationMode) {
-      gw.ventilationMode = dp.Id;
-      log(`Found ventilation mode: ${dp.Id}`);
-    } else if (isEnum(dp) && !isWritable(dp) && !gw.ventilationStage) {
-      gw.ventilationStage = dp.Id;
-      log(`Found ventilation stage: ${dp.Id}`);
+): Promise<DiscoveredRoom | null> {
+  try {
+    const node = await getNode(client, menuItem.Id);
+    const datapoints: RoomDatapointMap = {};
+
+    for (const { index, role } of tmpl.directMap) {
+      if (index < node.datapointItems.length) {
+        datapoints[role] = node.datapointItems[index].Id;
+      }
     }
+
+    if (tmpl.stateMenuIndex >= 0 && tmpl.stateMenuIndex < node.menuItems.length) {
+      const stateMi = node.menuItems[tmpl.stateMenuIndex];
+      if (hasSub(stateMi)) {
+        const stateNode = await getNode(client, stateMi.Id);
+        datapoints.stateMenuId = stateMi.Id;
+
+        for (const { index, role } of tmpl.stateMap) {
+          if (index < stateNode.datapointItems.length) {
+            datapoints[role] = stateNode.datapointItems[index].Id;
+          }
+        }
+      }
+    }
+
+    const name = menuItem.Text.Long || menuItem.Text.Short || `Room ${menuItem.Id}`;
+    log(`Mapped room "${name}" by template: ${JSON.stringify(datapoints)}`);
+
+    return { menuId: menuItem.Id, name, datapoints };
+  } catch (error) {
+    log(`Failed to map room ${menuItem.Id}:`, error);
+    return null;
   }
 }
 
-/**
- * Recursively traverse the menu tree, discovering rooms and gateway datapoints.
- */
+// ---- Gateway datapoint collection ----
+
+async function collectGatewayDatapoints(
+  client: OZW772Client,
+  datapointItems: DatapointItem[],
+  gw: GatewayDatapointMap,
+  log: LogFn,
+): Promise<void> {
+  if (datapointItems.length === 0) return;
+  if (gw.outsideTemperature && gw.airPressure && gw.ventilationMode && gw.ventilationStage) return;
+
+  for (const dp of datapointItems) {
+    let enriched = dp;
+    if (!dp.Type) {
+      try {
+        const value = await client.readDatapoint(dp.Id);
+        enriched = { ...dp, Type: value.Type, Unit: value.Unit };
+      } catch {
+        continue;
+      }
+    }
+
+    if (isPressure(enriched) && !gw.airPressure) {
+      gw.airPressure = enriched.Id;
+      log(`Found air pressure: ${enriched.Id}`);
+    } else if (isCelsius(enriched) && !isWritable(enriched) && !gw.outsideTemperature) {
+      gw.outsideTemperature = enriched.Id;
+      log(`Found outside temperature: ${enriched.Id}`);
+    } else if (isEnum(enriched) && isWritable(enriched) && !gw.ventilationMode) {
+      gw.ventilationMode = enriched.Id;
+      log(`Found ventilation mode: ${enriched.Id}`);
+    } else if (isEnum(enriched) && !isWritable(enriched) && !gw.ventilationStage) {
+      gw.ventilationStage = enriched.Id;
+      log(`Found ventilation stage: ${enriched.Id}`);
+    }
+
+    if (gw.outsideTemperature && gw.airPressure && gw.ventilationMode && gw.ventilationStage) break;
+  }
+}
+
+// ---- Tree traversal ----
+
 async function traverseTree(
   client: OZW772Client,
   parentId: string | undefined,
   depth: number,
   result: DiscoveryResult,
+  template: { value: RoomTemplate | null },
   log: LogFn,
 ): Promise<void> {
   if (depth >= MAX_DEPTH) return;
 
   const node = await getNode(client, parentId);
 
-  // Check if this node's children are rooms (only at depth >= 1 to skip root)
-  if (node.menuItems.length > 0 && depth >= 1) {
-    const isContainer = await checkIfRoomsContainer(client, node);
+  if (node.menuItems.length === 0 && node.datapointItems.length === 0) {
+    log(`Empty response for ID ${parentId || 'root'}`);
+    return;
+  }
+
+  log(`Depth ${depth}, ID ${parentId || 'root'}: ${node.menuItems.length} menus, ${node.datapointItems.length} datapoints`);
+
+  // Check if this node's children are rooms
+  if (node.menuItems.length >= 2 && depth >= 1) {
+    const isContainer = await checkIfRoomsContainer(client, node, log);
     if (isContainer) {
       log(`Found rooms container at ID ${parentId} with ${node.menuItems.length} rooms`);
-      for (const mi of node.menuItems) {
-        const room = await classifyRoom(client, mi, log);
-        if (room) result.rooms.push(room);
+
+      const subMenuChildren = node.menuItems.filter(mi => hasSub(mi));
+      for (let i = 0; i < subMenuChildren.length; i++) {
+        if (!template.value) {
+          const classified = await classifyRoomFull(client, subMenuChildren[i], log);
+          if (classified) {
+            result.rooms.push(classified.room);
+            template.value = classified.template;
+          }
+        } else {
+          const room = await classifyRoomByTemplate(client, subMenuChildren[i], template.value, log);
+          if (room) result.rooms.push(room);
+        }
       }
       return;
     }
   }
 
-  // Collect gateway-level datapoints at this node
-  collectGatewayDatapoints(node.datapointItems, result.gatewayDatapoints, log);
+  // Collect gateway-level datapoints
+  await collectGatewayDatapoints(client, node.datapointItems, result.gatewayDatapoints, log);
 
   // Recurse into sub-menus
   for (const mi of node.menuItems) {
-    if (mi.HasSubMenu === 'true') {
-      await traverseTree(client, mi.Id, depth + 1, result, log);
+    if (hasSub(mi)) {
+      await traverseTree(client, mi.Id, depth + 1, result, template, log);
     }
   }
 }
@@ -230,10 +382,6 @@ async function traverseTree(
 /**
  * Discover the full system: rooms and gateway datapoints.
  * Traverses the OZW772 menu tree from root (max depth 5).
- *
- * @param client - Authenticated OZW772Client
- * @param log - Logger function (typically driver's this.log)
- * @returns Discovery result with rooms and gateway datapoints
  */
 export async function discoverSystem(
   client: OZW772Client,
@@ -243,10 +391,11 @@ export async function discoverSystem(
     rooms: [],
     gatewayDatapoints: {},
   };
+  const template = { value: null as RoomTemplate | null };
 
   log('Starting system discovery...');
-  await traverseTree(client, undefined, 0, result, log);
-  log(`Discovery complete: ${result.rooms.length} rooms, gateway datapoints: ${JSON.stringify(result.gatewayDatapoints)}`);
+  await traverseTree(client, undefined, 0, result, template, log);
+  log(`Discovery complete: ${result.rooms.length} rooms, gateway: ${JSON.stringify(result.gatewayDatapoints)}`);
 
   return result;
 }
