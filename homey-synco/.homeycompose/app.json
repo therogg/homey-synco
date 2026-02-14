@@ -1,9 +1,11 @@
 {
   "id": "com.siemens.synco",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
-  "platforms": ["local"],
+  "platforms": [
+    "local"
+  ],
   "name": {
     "en": "Siemens Synco Living",
     "de": "Siemens Synco Living"
@@ -12,7 +14,9 @@
     "en": "Smart building automation for your home - control room temperature, ventilation, and comfort",
     "de": "Intelligente Gebäudeautomation für Ihr Zuhause - Raumtemperatur, Lüftung und Komfort steuern"
   },
-  "category": ["climate"],
+  "category": [
+    "climate"
+  ],
   "permissions": [],
   "settings": [
     {
@@ -74,8 +78,25 @@
   },
   "brandColor": "#009999",
   "tags": {
-    "en": ["siemens", "synco", "hvac", "heating", "climate", "room controller", "ozw772", "ozw672"],
-    "de": ["siemens", "synco", "heizung", "klima", "raumregler", "ozw772", "ozw672"]
+    "en": [
+      "siemens",
+      "synco",
+      "hvac",
+      "heating",
+      "climate",
+      "room controller",
+      "ozw772",
+      "ozw672"
+    ],
+    "de": [
+      "siemens",
+      "synco",
+      "heizung",
+      "klima",
+      "raumregler",
+      "ozw772",
+      "ozw672"
+    ]
   },
   "contributing": {
     "donate": {

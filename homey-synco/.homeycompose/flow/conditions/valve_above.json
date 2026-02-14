@@ -5,14 +5,14 @@
     "de": "Ventilstellung ist über"
   },
   "titleFormatted": {
-    "en": "Valve position is above [[position]] %",
-    "de": "Ventilstellung ist über [[position]] %"
+    "en": "[[device]] valve position is above [[position]] %",
+    "de": "[[device]] Ventilstellung ist über [[position]] %"
   },
   "args": [
     {
       "type": "device",
       "name": "device",
-      "filter": "driver_id=room"
+      "filter": "capabilities=valve_position"
     },
     {
       "type": "number",

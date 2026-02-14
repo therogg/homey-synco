@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.siemens.synco",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -125,14 +125,14 @@
           "de": "Wird ausgelöst, wenn die Ventilstellung den Schwellwert überschreitet"
         },
         "titleFormatted": {
-          "en": "Valve opened above [[threshold]] %",
-          "de": "Ventil öffnete über [[threshold]] %"
+          "en": "[[device]] valve opened above [[threshold]] %",
+          "de": "[[device]] Ventil öffnete über [[threshold]] %"
         },
         "args": [
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=room"
+            "filter": "capabilities=valve_position"
           },
           {
             "type": "number",
@@ -167,14 +167,14 @@
           "de": "Betriebsmodus ist"
         },
         "titleFormatted": {
-          "en": "Operating mode is [[mode]]",
-          "de": "Betriebsmodus ist [[mode]]"
+          "en": "[[device]] operating mode is [[mode]]",
+          "de": "[[device]] Betriebsmodus ist [[mode]]"
         },
         "args": [
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=room"
+            "filter": "capabilities=thermostat_mode"
           },
           {
             "type": "dropdown",
@@ -226,14 +226,14 @@
           "de": "Ventilstellung ist über"
         },
         "titleFormatted": {
-          "en": "Valve position is above [[position]] %",
-          "de": "Ventilstellung ist über [[position]] %"
+          "en": "[[device]] valve position is above [[position]] %",
+          "de": "[[device]] Ventilstellung ist über [[position]] %"
         },
         "args": [
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=room"
+            "filter": "capabilities=valve_position"
           },
           {
             "type": "number",
@@ -257,14 +257,14 @@
           "de": "Abwesenheitsmodus setzen"
         },
         "titleFormatted": {
-          "en": "[[action]] absence mode",
-          "de": "Abwesenheitsmodus [[action]]"
+          "en": "[[device]] [[action]] absence mode",
+          "de": "[[device]] Abwesenheitsmodus [[action]]"
         },
         "args": [
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=room"
+            "filter": "capabilities=thermostat_mode"
           },
           {
             "type": "dropdown",
@@ -331,7 +331,60 @@
         "large": "/drivers/gateway/assets/images/large.png",
         "xlarge": "/drivers/gateway/assets/images/xlarge.png"
       },
-      "id": "gateway"
+      "id": "gateway",
+      "settings": [
+        {
+          "id": "poll_interval",
+          "type": "number",
+          "label": {
+            "en": "Polling Interval (seconds)",
+            "de": "Abfrageintervall (Sekunden)"
+          },
+          "hint": {
+            "en": "How often to poll the gateway for updates",
+            "de": "Wie oft das Gateway abgefragt wird"
+          },
+          "value": 60,
+          "min": 30,
+          "max": 300
+        },
+        {
+          "id": "setpoint_type",
+          "type": "dropdown",
+          "label": {
+            "en": "Target Temperature Mode",
+            "de": "Sollwert-Modus"
+          },
+          "hint": {
+            "en": "Which setpoint to control when changing target temperature (only for room devices)",
+            "de": "Welcher Sollwert beim Ändern der Zieltemperatur gesteuert wird (nur für Raum-Geräte)"
+          },
+          "value": "comfort",
+          "values": [
+            {
+              "id": "comfort",
+              "label": {
+                "en": "Comfort",
+                "de": "Komfort"
+              }
+            },
+            {
+              "id": "precomfort",
+              "label": {
+                "en": "Pre-Comfort",
+                "de": "Vorkomfort"
+              }
+            },
+            {
+              "id": "economy",
+              "label": {
+                "en": "Economy",
+                "de": "Eco"
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "name": {

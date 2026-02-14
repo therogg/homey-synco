@@ -9,33 +9,30 @@
 import Homey from 'homey';
 import { OZW772Client, OZW772Error } from '../../lib/OZW772Client';
 import { DATAPOINT_OFFSETS, DEFAULTS } from '../../lib/constants';
+import { RoomDatapointMap } from '../../lib/types';
 
-/** Room device store structure */
 interface RoomStore {
   host: string;
   username: string;
   password: string;
   useHttps?: boolean;
   roomMenuId: string;
-  stateMenuId: string;
-  setpointsMenuId: string;
-  modeMenuId: string;
+  stateMenuId?: string;
+  setpointsMenuId?: string;
+  modeMenuId?: string;
+  discoveredDatapoints?: RoomDatapointMap;
 }
 
-/** Room device settings structure */
 interface RoomSettings {
   poll_interval: number;
   setpoint_type: 'comfort' | 'precomfort' | 'economy';
 }
 
-/** Supported thermostat operating modes */
 type ThermostatMode = 'auto' | 'comfort' | 'precomfort' | 'economy' | 'protection';
 
-/** Number of consecutive failures before marking device unavailable */
 const FAILURE_THRESHOLD = 3;
-
-/** Number of consecutive successes before marking device available again */
 const RECOVERY_THRESHOLD = 2;
+const TEMPERATURE_DEBOUNCE_MS = 2000;
 
 const MODE_TO_ENUM: Record<ThermostatMode, string> = {
   auto: '0',
@@ -61,39 +58,21 @@ const MODE_DISPLAY_VALUES: Record<ThermostatMode, string> = {
   protection: 'Schutz',
 };
 
-/**
- * Room Device class for Synco Living room thermostats
- */
-/** Debounce delay for temperature changes in milliseconds */
-const TEMPERATURE_DEBOUNCE_MS = 2000;
-
 class RoomDevice extends Homey.Device {
   private client: OZW772Client | null = null;
   private pollInterval: NodeJS.Timeout | null = null;
   private roomBaseId: number = 0;
-
   private previousValvePosition: number | null = null;
-
-  /** Pending temperature values waiting to be sent (keyed by setpoint type) */
   private pendingSetpoints: Map<string, number> = new Map();
-  /** Debounce timers for temperature changes (keyed by setpoint type) */
   private setpointDebounceTimers: Map<string, NodeJS.Timeout> = new Map();
-
-  /** Counter for consecutive poll failures */
   private consecutiveFailures: number = 0;
-
-  /** Counter for consecutive poll successes (used for recovery) */
   private consecutiveSuccesses: number = 0;
-
-  /** Last error message for debugging (accessible via getLastError) */
   private _lastError: string | null = null;
-
   private valveOpenedTrigger!: Homey.FlowCardTriggerDevice;
 
-  /**
-   * Initialize the device
-   * Sets up client connection, registers capability listeners, and starts polling
-   */
+  // Resolved datapoint IDs (discovered or fallback to offset calculation)
+  private resolvedIds: Record<string, string> = {};
+
   async onInit(): Promise<void> {
     this.log('Room device initialized:', this.getName());
 
@@ -113,14 +92,12 @@ class RoomDevice extends Homey.Device {
     });
 
     this.roomBaseId = parseInt(store.roomMenuId, 10);
+    this.resolveDatapointIds(store);
 
-    // Add missing capabilities for existing devices (needed after capability updates)
     await this.ensureCapabilities();
 
     this.registerCapabilityListener('target_temperature', this.onCapabilityTargetTemperature.bind(this));
     this.registerCapabilityListener('thermostat_mode', this.onCapabilityThermostatMode.bind(this));
-
-    // Register listeners for individual setpoint capabilities
     this.registerCapabilityListener('setpoint_comfort', (value: number) =>
       this.onCapabilitySetpoint('comfort', value));
     this.registerCapabilityListener('setpoint_precomfort', (value: number) =>
@@ -132,7 +109,6 @@ class RoomDevice extends Homey.Device {
 
     this.registerFlowCards();
 
-    // Stagger initial poll to prevent gateway overload when multiple devices start
     const staggerDelay = Math.random() * DEFAULTS.POLL_STAGGER_MAX_MS;
     this.log(`Staggering initial poll by ${Math.round(staggerDelay / 1000)} seconds`);
 
@@ -143,10 +119,27 @@ class RoomDevice extends Homey.Device {
     }, staggerDelay);
   }
 
-  /**
-   * Ensure all required capabilities exist on the device
-   * This is needed when new capabilities are added after devices have been paired
-   */
+  // ---- ID resolution ----
+
+  private resolveDatapointIds(store: RoomStore): void {
+    const dp = store.discoveredDatapoints || {};
+    const fallback = (offset: number) => (this.roomBaseId + offset).toString();
+
+    this.resolvedIds = {
+      actualTemp: dp.actualTemp || fallback(DATAPOINT_OFFSETS.ACTUAL_TEMP),
+      currentSetpoint: dp.currentSetpoint || fallback(DATAPOINT_OFFSETS.CURRENT_SETPOINT),
+      valvePosition: dp.valvePosition || fallback(DATAPOINT_OFFSETS.VALVE_POSITION),
+      modeState: dp.modeState || fallback(DATAPOINT_OFFSETS.MODE_STATE),
+      modePreselection: dp.modePreselection || fallback(DATAPOINT_OFFSETS.MODE_PRESELECTION),
+      absenceMode: dp.absenceMode || fallback(DATAPOINT_OFFSETS.ABSENCE_MODE),
+      comfortSetpoint: dp.comfortSetpoint || fallback(DATAPOINT_OFFSETS.COMFORT_SETPOINT),
+      precomfortSetpoint: dp.precomfortSetpoint || fallback(DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT),
+      economySetpoint: dp.economySetpoint || fallback(DATAPOINT_OFFSETS.ECONOMY_SETPOINT),
+      protectionSetpoint: dp.protectionSetpoint || fallback(DATAPOINT_OFFSETS.PROTECTION_SETPOINT),
+    };
+    this.log('Resolved datapoint IDs:', JSON.stringify(this.resolvedIds));
+  }
+
   private async ensureCapabilities(): Promise<void> {
     const requiredCapabilities = [
       'measure_temperature',
@@ -169,10 +162,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Register all flow cards (triggers, conditions, actions)
-   * Note: temperature/mode triggers and actions are auto-generated by system capabilities
-   */
   private registerFlowCards(): void {
     this.valveOpenedTrigger = this.homey.flow.getDeviceTriggerCard('valve_opened');
 
@@ -200,11 +189,6 @@ class RoomDevice extends Homey.Device {
     this.log('Flow cards registered');
   }
 
-  /**
-   * Set the absence/vacation mode for the room
-   * @param enable - True to enable absence mode, false to disable
-   * @throws {Error} When not connected or write fails
-   */
   async setAbsenceMode(enable: boolean): Promise<void> {
     if (!this.client) {
       throw new Error('Not connected to gateway');
@@ -212,13 +196,12 @@ class RoomDevice extends Homey.Device {
 
     this.log(`Setting absence mode to ${enable ? 'enabled' : 'disabled'}`);
 
-    const absenceModeId = this.getDatapointId(DATAPOINT_OFFSETS.ABSENCE_MODE);
     const enumValue = enable ? '1' : '0';
     const displayValue = enable ? 'Aktiv' : 'Inaktiv';
 
     try {
       const success = await this.client.writeEnumeration(
-        absenceModeId,
+        this.resolvedIds.absenceMode,
         displayValue,
         enumValue
       );
@@ -234,9 +217,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Start the polling interval for data updates
-   */
   private startPolling(): void {
     const settings = this.getSettings() as RoomSettings;
     const intervalMs = (settings.poll_interval || (DEFAULTS.POLLING_INTERVAL_MS / 1000)) * 1000;
@@ -253,43 +233,19 @@ class RoomDevice extends Homey.Device {
     this.log(`Polling interval set to ${intervalMs / 1000} seconds`);
   }
 
-  /**
-   * Calculate the datapoint ID from the room base ID and offset
-   * @param offset - Datapoint offset from DATAPOINT_OFFSETS
-   */
-  private getDatapointId(offset: number): string {
-    return (this.roomBaseId + offset).toString();
-  }
-
-  /**
-   * Map API enum value to thermostat mode string
-   * @param enumValue - Enum value from API
-   */
   private mapEnumToMode(enumValue: string | undefined): ThermostatMode {
     if (!enumValue) return 'auto';
     return ENUM_TO_MODE[enumValue] || 'auto';
   }
 
-  /**
-   * Map thermostat mode string to API enum value
-   * @param mode - Thermostat mode string
-   */
   private mapModeToEnum(mode: string): string {
     return MODE_TO_ENUM[mode as ThermostatMode] || '0';
   }
 
-  /**
-   * Get the display value for a thermostat mode
-   * @param mode - Thermostat mode string
-   */
   private getModeDisplayValue(mode: string): string {
     return MODE_DISPLAY_VALUES[mode as ThermostatMode] || 'Automatik';
   }
 
-  /**
-   * Poll data from the gateway and update device capabilities
-   * Implements graceful error handling with availability management
-   */
   async pollData(): Promise<void> {
     if (!this.client) {
       this.error('Cannot poll: client not initialized');
@@ -302,14 +258,14 @@ class RoomDevice extends Homey.Device {
       await this.client.ensureSession();
 
       const datapointIds = [
-        this.getDatapointId(DATAPOINT_OFFSETS.ACTUAL_TEMP),
-        this.getDatapointId(DATAPOINT_OFFSETS.CURRENT_SETPOINT),
-        this.getDatapointId(DATAPOINT_OFFSETS.VALVE_POSITION),
-        this.getDatapointId(DATAPOINT_OFFSETS.MODE_STATE),
-        this.getDatapointId(DATAPOINT_OFFSETS.COMFORT_SETPOINT),
-        this.getDatapointId(DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT),
-        this.getDatapointId(DATAPOINT_OFFSETS.ECONOMY_SETPOINT),
-        this.getDatapointId(DATAPOINT_OFFSETS.PROTECTION_SETPOINT),
+        this.resolvedIds.actualTemp,
+        this.resolvedIds.currentSetpoint,
+        this.resolvedIds.valvePosition,
+        this.resolvedIds.modeState,
+        this.resolvedIds.comfortSetpoint,
+        this.resolvedIds.precomfortSetpoint,
+        this.resolvedIds.economySetpoint,
+        this.resolvedIds.protectionSetpoint,
       ];
 
       this.log('Reading datapoints:', datapointIds);
@@ -321,7 +277,7 @@ class RoomDevice extends Homey.Device {
 
       this.log('Datapoint results:', JSON.stringify(Array.from(results.entries())));
 
-      const actualTemp = results.get(this.getDatapointId(DATAPOINT_OFFSETS.ACTUAL_TEMP));
+      const actualTemp = results.get(this.resolvedIds.actualTemp);
       if (actualTemp) {
         const temp = OZW772Client.parseNumericValue(actualTemp);
         if (temp !== null) {
@@ -329,7 +285,7 @@ class RoomDevice extends Homey.Device {
         }
       }
 
-      const setpoint = results.get(this.getDatapointId(DATAPOINT_OFFSETS.CURRENT_SETPOINT));
+      const setpoint = results.get(this.resolvedIds.currentSetpoint);
       if (setpoint) {
         const temp = OZW772Client.parseNumericValue(setpoint);
         if (temp !== null) {
@@ -337,7 +293,7 @@ class RoomDevice extends Homey.Device {
         }
       }
 
-      const valve = results.get(this.getDatapointId(DATAPOINT_OFFSETS.VALVE_POSITION));
+      const valve = results.get(this.resolvedIds.valvePosition);
       if (valve) {
         const position = OZW772Client.parseNumericValue(valve);
         if (position !== null) {
@@ -353,14 +309,13 @@ class RoomDevice extends Homey.Device {
         }
       }
 
-      const mode = results.get(this.getDatapointId(DATAPOINT_OFFSETS.MODE_STATE));
+      const mode = results.get(this.resolvedIds.modeState);
       if (mode) {
         const modeValue = this.mapEnumToMode(mode.EnumValue);
         await this.setCapabilityValue('thermostat_mode', modeValue).catch(this.error);
       }
 
-      // Update individual setpoint capabilities
-      const comfortSetpoint = results.get(this.getDatapointId(DATAPOINT_OFFSETS.COMFORT_SETPOINT));
+      const comfortSetpoint = results.get(this.resolvedIds.comfortSetpoint);
       if (comfortSetpoint) {
         const temp = OZW772Client.parseNumericValue(comfortSetpoint);
         if (temp !== null) {
@@ -368,7 +323,7 @@ class RoomDevice extends Homey.Device {
         }
       }
 
-      const precomfortSetpoint = results.get(this.getDatapointId(DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT));
+      const precomfortSetpoint = results.get(this.resolvedIds.precomfortSetpoint);
       if (precomfortSetpoint) {
         const temp = OZW772Client.parseNumericValue(precomfortSetpoint);
         if (temp !== null) {
@@ -376,7 +331,7 @@ class RoomDevice extends Homey.Device {
         }
       }
 
-      const economySetpoint = results.get(this.getDatapointId(DATAPOINT_OFFSETS.ECONOMY_SETPOINT));
+      const economySetpoint = results.get(this.resolvedIds.economySetpoint);
       if (economySetpoint) {
         const temp = OZW772Client.parseNumericValue(economySetpoint);
         if (temp !== null) {
@@ -384,7 +339,7 @@ class RoomDevice extends Homey.Device {
         }
       }
 
-      const protectionSetpoint = results.get(this.getDatapointId(DATAPOINT_OFFSETS.PROTECTION_SETPOINT));
+      const protectionSetpoint = results.get(this.resolvedIds.protectionSetpoint);
       if (protectionSetpoint) {
         const temp = OZW772Client.parseNumericValue(protectionSetpoint);
         if (temp !== null) {
@@ -399,9 +354,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Handle successful poll - manage availability recovery
-   */
   private async handlePollSuccess(): Promise<void> {
     this.consecutiveFailures = 0;
     this.consecutiveSuccesses++;
@@ -414,10 +366,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Handle poll failure - manage availability and error logging
-   * @param error - The error that occurred
-   */
   private async handlePollFailure(error: unknown): Promise<void> {
     this.consecutiveSuccesses = 0;
     this.consecutiveFailures++;
@@ -437,10 +385,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Extract a descriptive error message from an error
-   * @param error - The error to extract message from
-   */
   private getErrorMessage(error: unknown): string {
     if (error instanceof OZW772Error) {
       return `[${error.code}] ${error.message}`;
@@ -451,10 +395,6 @@ class RoomDevice extends Homey.Device {
     return 'Unknown error';
   }
 
-  /**
-   * Get a user-friendly error message for the Homey UI
-   * @param error - The error to convert
-   */
   private getUserFriendlyError(error: unknown): string {
     if (error instanceof OZW772Error) {
       switch (error.code) {
@@ -475,37 +415,24 @@ class RoomDevice extends Homey.Device {
     return 'Connection error';
   }
 
-  /**
-   * Handle target temperature capability changes with debouncing
-   * Uses setpoint_type setting to determine which setpoint to control
-   * @param value - New target temperature value
-   */
   async onCapabilityTargetTemperature(value: number): Promise<void> {
     const settings = this.getSettings() as RoomSettings;
     const setpointType = settings.setpoint_type || 'comfort';
     await this.onCapabilitySetpoint(setpointType, value);
   }
 
-  /**
-   * Handle individual setpoint capability changes with debouncing
-   * @param setpointType - Type of setpoint (comfort, precomfort, economy)
-   * @param value - New temperature value
-   */
   async onCapabilitySetpoint(setpointType: string, value: number): Promise<void> {
     const roundedValue = Math.round(value * 10) / 10;
 
     this.log(`Setpoint ${setpointType} change requested: ${roundedValue}°C (debouncing...)`);
 
-    // Store the pending value
     this.pendingSetpoints.set(setpointType, roundedValue);
 
-    // Clear existing timer for this setpoint type
     const existingTimer = this.setpointDebounceTimers.get(setpointType);
     if (existingTimer) {
       this.homey.clearTimeout(existingTimer);
     }
 
-    // Set new timer - will fire after user stops changing
     const timer = this.homey.setTimeout(async () => {
       await this.sendPendingSetpoint(setpointType);
     }, TEMPERATURE_DEBOUNCE_MS);
@@ -513,10 +440,6 @@ class RoomDevice extends Homey.Device {
     this.setpointDebounceTimers.set(setpointType, timer);
   }
 
-  /**
-   * Send the pending setpoint to the gateway
-   * @param setpointType - Type of setpoint to send
-   */
   private async sendPendingSetpoint(setpointType: string): Promise<void> {
     const value = this.pendingSetpoints.get(setpointType);
     if (value === undefined) return;
@@ -529,15 +452,15 @@ class RoomDevice extends Homey.Device {
       return;
     }
 
-    const setpointTypeToOffset: Record<string, number> = {
-      comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
-      precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
-      economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
-      protection: DATAPOINT_OFFSETS.PROTECTION_SETPOINT,
+    const setpointTypeToKey: Record<string, string> = {
+      comfort: 'comfortSetpoint',
+      precomfort: 'precomfortSetpoint',
+      economy: 'economySetpoint',
+      protection: 'protectionSetpoint',
     };
 
-    const offset = setpointTypeToOffset[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
-    const setpointId = this.getDatapointId(offset);
+    const key = setpointTypeToKey[setpointType] || 'comfortSetpoint';
+    const setpointId = this.resolvedIds[key];
 
     this.log(`Sending ${setpointType} setpoint ${value}°C to gateway (datapoint: ${setpointId})`);
 
@@ -555,11 +478,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Handle thermostat mode capability changes
-   * @param value - New thermostat mode value
-   * @throws {Error} When not connected or write fails
-   */
   async onCapabilityThermostatMode(value: string): Promise<void> {
     if (!this.client) {
       throw new Error('Not connected to gateway');
@@ -567,13 +485,12 @@ class RoomDevice extends Homey.Device {
 
     this.log(`Setting thermostat mode to ${value}`);
 
-    const modePreselectionId = this.getDatapointId(DATAPOINT_OFFSETS.MODE_PRESELECTION);
     const enumValue = this.mapModeToEnum(value);
     const displayValue = this.getModeDisplayValue(value);
 
     try {
       const success = await this.client.writeEnumeration(
-        modePreselectionId,
+        this.resolvedIds.modePreselection,
         displayValue,
         enumValue
       );
@@ -589,22 +506,18 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Update the target_temperature capability options based on setpoint type
-   * @param setpointType - The setpoint type (comfort, precomfort, economy)
-   */
   private async updateTemperatureRange(setpointType: string): Promise<void> {
     if (!this.client) return;
 
-    const setpointTypeToOffset: Record<string, number> = {
-      comfort: DATAPOINT_OFFSETS.COMFORT_SETPOINT,
-      precomfort: DATAPOINT_OFFSETS.PRECOMFORT_SETPOINT,
-      economy: DATAPOINT_OFFSETS.ECONOMY_SETPOINT,
-      protection: DATAPOINT_OFFSETS.PROTECTION_SETPOINT,
+    const setpointTypeToKey: Record<string, string> = {
+      comfort: 'comfortSetpoint',
+      precomfort: 'precomfortSetpoint',
+      economy: 'economySetpoint',
+      protection: 'protectionSetpoint',
     };
 
-    const offset = setpointTypeToOffset[setpointType] || DATAPOINT_OFFSETS.COMFORT_SETPOINT;
-    const setpointId = this.getDatapointId(offset);
+    const key = setpointTypeToKey[setpointType] || 'comfortSetpoint';
+    const setpointId = this.resolvedIds[key];
 
     try {
       const desc = await this.client.getDatapointDesc(setpointId) as {
@@ -628,10 +541,6 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Handle settings changes
-   * @param options - Settings change options containing old/new settings and changed keys
-   */
   async onSettings({
     newSettings,
     changedKeys,
@@ -654,16 +563,12 @@ class RoomDevice extends Homey.Device {
     }
   }
 
-  /**
-   * Clean up when device is deleted
-   */
   async onDeleted(): Promise<void> {
     if (this.pollInterval) {
       this.homey.clearInterval(this.pollInterval);
       this.pollInterval = null;
     }
 
-    // Clear all pending setpoint timers
     for (const timer of this.setpointDebounceTimers.values()) {
       this.homey.clearTimeout(timer);
     }
@@ -674,10 +579,6 @@ class RoomDevice extends Homey.Device {
     this.log('Room device deleted:', this.getName());
   }
 
-  /**
-   * Get the last error message (useful for debugging)
-   * @returns The last error message or null if no error occurred
-   */
   getLastError(): string | null {
     return this._lastError;
   }

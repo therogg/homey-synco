@@ -567,8 +567,8 @@ export class OZW772Client {
       await httpClient.login();
       return { client: httpClient, useHttps: false };
     } catch (error) {
-      if (error instanceof OZW772Error && error.code === 'HTTPS_REQUIRED') {
-        // Gateway requires HTTPS, retry with HTTPS
+      // Fall back to HTTPS on redirect or connection refused (gateway with "Web access via http: Off")
+      if (error instanceof OZW772Error && (error.code === 'HTTPS_REQUIRED' || error.code === 'ECONNREFUSED')) {
         const httpsClient = new OZW772Client({ ...config, useHttps: true });
         await httpsClient.login();
         return { client: httpsClient, useHttps: true };

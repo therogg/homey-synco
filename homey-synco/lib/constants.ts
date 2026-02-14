@@ -34,6 +34,7 @@ export const DEFAULTS = {
 
 /**
  * Known device hierarchy IDs for QAX910-DE
+ * @deprecated Use dynamic discovery via lib/discovery.ts instead. Kept as fallback for existing devices.
  */
 export const DEVICE_IDS = {
   GATEWAY: '4232',
@@ -43,6 +44,7 @@ export const DEVICE_IDS = {
 
 /**
  * Room base IDs and offset for calculating other room datapoint IDs
+ * @deprecated Use dynamic discovery via lib/discovery.ts instead. Kept as fallback for existing devices.
  */
 export const ROOM_CONFIG = {
   FIRST_ROOM_ID: 5351,
@@ -66,6 +68,7 @@ export const ROOM_CONFIG = {
 /**
  * Datapoint offsets relative to room base ID
  * These offsets are added to the room base ID to get specific datapoint IDs
+ * @deprecated Use dynamic discovery via lib/discovery.ts instead. Kept as fallback for existing devices.
  */
 export const DATAPOINT_OFFSETS = {
   MODE_PRESELECTION: 2,    // 5353 for Wohnzimmer (5351 + 2)
@@ -87,6 +90,7 @@ export const DATAPOINT_OFFSETS = {
 
 /**
  * Gateway datapoint IDs for global (non-room-specific) data
+ * @deprecated Use dynamic discovery via lib/discovery.ts instead. Kept as fallback for existing devices.
  */
 export const GATEWAY_DATAPOINTS = {
   OUTSIDE_TEMPERATURE: '4725',

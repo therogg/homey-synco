@@ -1,0 +1,53 @@
+[
+  {
+    "id": "poll_interval",
+    "type": "number",
+    "label": {
+      "en": "Polling Interval (seconds)",
+      "de": "Abfrageintervall (Sekunden)"
+    },
+    "hint": {
+      "en": "How often to poll the gateway for updates",
+      "de": "Wie oft das Gateway abgefragt wird"
+    },
+    "value": 60,
+    "min": 30,
+    "max": 300
+  },
+  {
+    "id": "setpoint_type",
+    "type": "dropdown",
+    "label": {
+      "en": "Target Temperature Mode",
+      "de": "Sollwert-Modus"
+    },
+    "hint": {
+      "en": "Which setpoint to control when changing target temperature (only for room devices)",
+      "de": "Welcher Sollwert beim Ändern der Zieltemperatur gesteuert wird (nur für Raum-Geräte)"
+    },
+    "value": "comfort",
+    "values": [
+      {
+        "id": "comfort",
+        "label": {
+          "en": "Comfort",
+          "de": "Komfort"
+        }
+      },
+      {
+        "id": "precomfort",
+        "label": {
+          "en": "Pre-Comfort",
+          "de": "Vorkomfort"
+        }
+      },
+      {
+        "id": "economy",
+        "label": {
+          "en": "Economy",
+          "de": "Eco"
+        }
+      }
+    ]
+  }
+]

@@ -5,14 +5,14 @@
     "de": "Betriebsmodus ist"
   },
   "titleFormatted": {
-    "en": "Operating mode is [[mode]]",
-    "de": "Betriebsmodus ist [[mode]]"
+    "en": "[[device]] operating mode is [[mode]]",
+    "de": "[[device]] Betriebsmodus ist [[mode]]"
   },
   "args": [
     {
       "type": "device",
       "name": "device",
-      "filter": "driver_id=room"
+      "filter": "capabilities=thermostat_mode"
     },
     {
       "type": "dropdown",

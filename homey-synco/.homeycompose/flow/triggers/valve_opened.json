@@ -9,14 +9,14 @@
     "de": "Wird ausgelöst, wenn die Ventilstellung den Schwellwert überschreitet"
   },
   "titleFormatted": {
-    "en": "Valve opened above [[threshold]] %",
-    "de": "Ventil öffnete über [[threshold]] %"
+    "en": "[[device]] valve opened above [[threshold]] %",
+    "de": "[[device]] Ventil öffnete über [[threshold]] %"
   },
   "args": [
     {
       "type": "device",
       "name": "device",
-      "filter": "driver_id=room"
+      "filter": "capabilities=valve_position"
     },
     {
       "type": "number",

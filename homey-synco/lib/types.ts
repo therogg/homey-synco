@@ -120,3 +120,47 @@ export interface RoomData {
   valvePosition?: number;
   operatingMode?: OperatingMode;
 }
+
+/**
+ * Discovered room datapoint IDs (language-independent, resolved via menu tree)
+ */
+export interface RoomDatapointMap {
+  actualTemp?: string;
+  currentSetpoint?: string;
+  valvePosition?: string;
+  modeState?: string;
+  modePreselection?: string;
+  absenceMode?: string;
+  comfortSetpoint?: string;
+  precomfortSetpoint?: string;
+  economySetpoint?: string;
+  protectionSetpoint?: string;
+  stateMenuId?: string;
+}
+
+/**
+ * Discovered gateway datapoint IDs
+ */
+export interface GatewayDatapointMap {
+  outsideTemperature?: string;
+  airPressure?: string;
+  ventilationMode?: string;
+  ventilationStage?: string;
+}
+
+/**
+ * A discovered room with its classified datapoints
+ */
+export interface DiscoveredRoom {
+  menuId: string;
+  name: string;
+  datapoints: RoomDatapointMap;
+}
+
+/**
+ * Result of full system discovery
+ */
+export interface DiscoveryResult {
+  rooms: DiscoveredRoom[];
+  gatewayDatapoints: GatewayDatapointMap;
+}

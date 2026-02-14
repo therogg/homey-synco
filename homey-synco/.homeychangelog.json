@@ -10,5 +10,12 @@
   "1.0.2": {
     "en": "Added HTTPS support for newer gateway versions",
     "de": "HTTPS-Unterstützung für neuere Gateway-Versionen hinzugefügt"
+  },
+  "1.0.4": {
+    "en": "Gateway pairing now discovers and lists room devices automatically. Single pairing flow for gateway + all rooms."
+  },
+  "1.1.0": {
+    "en": "Dynamic menu tree discovery — rooms and datapoints are now detected automatically during pairing, supporting all controller variants (QAX910-DE, QAX910-EN, etc.). Improved HTTPS auto-detection for gateways with HTTP disabled.",
+    "de": "Dynamische Menu-Tree-Erkennung — Räume und Datenpunkte werden beim Pairing automatisch erkannt und unterstützen alle Controller-Varianten (QAX910-DE, QAX910-EN, etc.). Verbesserte HTTPS-Erkennung für Gateways mit deaktiviertem HTTP."
   }
 }

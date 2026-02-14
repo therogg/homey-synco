@@ -5,14 +5,14 @@
     "de": "Abwesenheitsmodus setzen"
   },
   "titleFormatted": {
-    "en": "[[action]] absence mode",
-    "de": "Abwesenheitsmodus [[action]]"
+    "en": "[[device]] [[action]] absence mode",
+    "de": "[[device]] Abwesenheitsmodus [[action]]"
   },
   "args": [
     {
       "type": "device",
       "name": "device",
-      "filter": "driver_id=room"
+      "filter": "capabilities=thermostat_mode"
     },
     {
       "type": "dropdown",
