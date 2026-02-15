@@ -396,14 +396,27 @@ export async function discoverSystem(
           log(`Found ${miCount} rooms in "${menuName(section)}"`);
 
           let template: RoomTemplate | null = null;
+          const skippedBeforeTemplate: MenuItem[] = [];
           for (const roomMi of sectionNode.menuItems) {
             if (!template) {
               const classified = await classifyRoomFull(client, roomMi, log);
               if (classified) {
                 result.rooms.push(classified.room);
                 template = classified.template;
+              } else {
+                skippedBeforeTemplate.push(roomMi);
               }
             } else {
+              const room = await classifyRoomByTemplate(client, roomMi, template, log);
+              if (room) result.rooms.push(room);
+            }
+          }
+          // Retry rooms that were skipped before the template was established
+          // Delay gives the gateway time to recover after intensive discovery
+          if (template && skippedBeforeTemplate.length > 0) {
+            log(`Retrying ${skippedBeforeTemplate.length} room(s) skipped before template`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            for (const roomMi of skippedBeforeTemplate) {
               const room = await classifyRoomByTemplate(client, roomMi, template, log);
               if (room) result.rooms.push(room);
             }

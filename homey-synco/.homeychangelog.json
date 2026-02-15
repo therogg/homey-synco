@@ -25,5 +25,9 @@
   "1.1.3": {
     "en": "Complete rewrite of room and gateway discovery based on actual API behavior. Rooms and all datapoints are now reliably detected.",
     "de": "Komplette Neuentwicklung der Raum- und Gateway-Erkennung basierend auf dem tatsächlichen API-Verhalten. Räume und alle Datenpunkte werden nun zuverlässig erkannt."
+  },
+  "1.1.4": {
+    "en": "Fixed: rooms that failed classification before a template was established are now retried, fixing missing rooms on some setups.",
+    "de": "Behoben: Räume die vor der Template-Erstellung fehlschlugen werden nun erneut versucht, behebt fehlende Räume bei bestimmten Konfigurationen."
   }
 }
