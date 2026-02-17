@@ -11,9 +11,6 @@
  *  - Setpoints:       5 DPs, ≥4 RW → [0-3]=comfort/precomfort/economy/protection
  *  - State:           ≥3 DPs, 0 RW → [0]=actualTemp, [1]=currentSetpoint, [2]=valvePosition
  *
- * Heating+cooling rooms have multiple setpoints sub-menus (one for heating, one for cooling).
- * Disambiguation reads the first writable DP from each candidate — heating setpoints are lower.
- *
  * Gateway DPs are found by reading individual datapoints for Type/Unit.
  */
 
@@ -119,55 +116,20 @@ async function profileRoomSubMenus(
   return profiles;
 }
 
-async function findTemplate(
-  client: OZW772Client,
-  profiles: SubMenuProfile[],
-  log: LogFn,
-): Promise<RoomTemplate | null> {
+function findTemplate(profiles: SubMenuProfile[]): RoomTemplate | null {
   let opIdx = -1;
+  let spIdx = -1;
   let stIdx = -1;
-
-  const spCandidates: SubMenuProfile[] = [];
 
   for (const p of profiles) {
     const dpCount = p.datapointItems.length;
     if (dpCount === 4 && p.rwCount === 2 && opIdx === -1) {
       opIdx = p.index;
-    } else if (dpCount === 5 && p.rwCount >= 4) {
-      spCandidates.push(p);
+    } else if (dpCount === 5 && p.rwCount >= 4 && spIdx === -1) {
+      spIdx = p.index;
     } else if (dpCount >= 3 && p.rwCount === 0 && stIdx === -1) {
       stIdx = p.index;
     }
-  }
-
-  // Setpoints: single candidate or disambiguate multiple (heating+cooling rooms)
-  let spIdx = -1;
-  if (spCandidates.length === 1) {
-    spIdx = spCandidates[0].index;
-  } else if (spCandidates.length > 1) {
-    // Heating+cooling room: pick the heating setpoints sub-menu.
-    // Heating comfort setpoint (~20-22°C) is lower than any cooling setpoint (~26-35°C).
-    log(`Found ${spCandidates.length} setpoints sub-menus, disambiguating by DP values...`);
-    let bestProfile = spCandidates[0];
-    let bestValue = Infinity;
-    for (const candidate of spCandidates) {
-      const firstWritable = candidate.datapointItems.find(dp => isWritable(dp));
-      if (firstWritable) {
-        try {
-          const value = await client.readDatapoint(firstWritable.Id);
-          const numValue = parseFloat(value.Value);
-          log(`  Setpoints [${candidate.index}] "${menuName(candidate.menuItem)}": DP ${firstWritable.Id} = ${numValue}`);
-          if (!isNaN(numValue) && numValue < bestValue) {
-            bestValue = numValue;
-            bestProfile = candidate;
-          }
-        } catch {
-          // Skip on read error
-        }
-      }
-    }
-    spIdx = bestProfile.index;
-    log(`  Selected heating setpoints at sub-menu index ${spIdx}`);
   }
 
   if (opIdx === -1 || spIdx === -1 || stIdx === -1) return null;
@@ -211,17 +173,17 @@ function extractDatapoints(
   return dp;
 }
 
-async function classifyRoom(
+async function classifyRoomFull(
   client: OZW772Client,
   roomMenuItem: MenuItem,
   log: LogFn,
-): Promise<DiscoveredRoom | null> {
+): Promise<{ room: DiscoveredRoom; template: RoomTemplate } | null> {
   try {
     const roomNode = await getNode(client, roomMenuItem.Id);
     if (!isRoomLike(roomNode)) return null;
 
     const profiles = await profileRoomSubMenus(client, roomNode);
-    const tmpl = await findTemplate(client, profiles, log);
+    const tmpl = findTemplate(profiles);
 
     if (!tmpl) {
       const sigs = profiles.map(p => `[${p.datapointItems.length}dp/${p.rwCount}rw]`).join(' ');
@@ -233,9 +195,59 @@ async function classifyRoom(
     const name = menuName(roomMenuItem);
     log(`Classified "${name}": ${JSON.stringify(datapoints)}`);
 
-    return { menuId: roomMenuItem.Id, name, datapoints };
+    return { room: { menuId: roomMenuItem.Id, name, datapoints }, template: tmpl };
   } catch (error) {
     log(`Failed to classify room ${roomMenuItem.Id}:`, error);
+    return null;
+  }
+}
+
+async function classifyRoomByTemplate(
+  client: OZW772Client,
+  roomMenuItem: MenuItem,
+  tmpl: RoomTemplate,
+  log: LogFn,
+): Promise<DiscoveredRoom | null> {
+  try {
+    const roomNode = await getNode(client, roomMenuItem.Id);
+    const datapoints: RoomDatapointMap = {};
+
+    // Fetch only the 3 relevant sub-menus by index
+    if (tmpl.operatingModeIndex < roomNode.menuItems.length) {
+      const opNode = await getNode(client, roomNode.menuItems[tmpl.operatingModeIndex].Id);
+      if (opNode.datapointItems.length >= 4) {
+        datapoints.modePreselection = opNode.datapointItems[0].Id;
+        datapoints.modeState = opNode.datapointItems[1].Id;
+        datapoints.absenceMode = opNode.datapointItems[3].Id;
+      }
+    }
+
+    if (tmpl.setpointsIndex < roomNode.menuItems.length) {
+      const spNode = await getNode(client, roomNode.menuItems[tmpl.setpointsIndex].Id);
+      if (spNode.datapointItems.length >= 4) {
+        datapoints.comfortSetpoint = spNode.datapointItems[0].Id;
+        datapoints.precomfortSetpoint = spNode.datapointItems[1].Id;
+        datapoints.economySetpoint = spNode.datapointItems[2].Id;
+        datapoints.protectionSetpoint = spNode.datapointItems[3].Id;
+      }
+    }
+
+    if (tmpl.stateIndex < roomNode.menuItems.length) {
+      const stMi = roomNode.menuItems[tmpl.stateIndex];
+      const stNode = await getNode(client, stMi.Id);
+      datapoints.stateMenuId = stMi.Id;
+      if (stNode.datapointItems.length >= 3) {
+        datapoints.actualTemp = stNode.datapointItems[0].Id;
+        datapoints.currentSetpoint = stNode.datapointItems[1].Id;
+        datapoints.valvePosition = stNode.datapointItems[2].Id;
+      }
+    }
+
+    const name = menuName(roomMenuItem);
+    log(`Template room "${name}": ${JSON.stringify(datapoints)}`);
+    return { menuId: roomMenuItem.Id, name, datapoints };
+  } catch (error) {
+    log(`Failed to map room ${roomMenuItem.Id}:`, error);
     return null;
   }
 }
@@ -383,21 +395,29 @@ export async function discoverSystem(
         if (isContainer) {
           log(`Found ${miCount} rooms in "${menuName(section)}"`);
 
-          const failedRooms: MenuItem[] = [];
+          let template: RoomTemplate | null = null;
+          const skippedBeforeTemplate: MenuItem[] = [];
           for (const roomMi of sectionNode.menuItems) {
-            const room = await classifyRoom(client, roomMi, log);
-            if (room) {
-              result.rooms.push(room);
+            if (!template) {
+              const classified = await classifyRoomFull(client, roomMi, log);
+              if (classified) {
+                result.rooms.push(classified.room);
+                template = classified.template;
+              } else {
+                skippedBeforeTemplate.push(roomMi);
+              }
             } else {
-              failedRooms.push(roomMi);
+              const room = await classifyRoomByTemplate(client, roomMi, template, log);
+              if (room) result.rooms.push(room);
             }
           }
-          // Retry failed rooms after a delay (gives gateway time to recover)
-          if (failedRooms.length > 0) {
-            log(`Retrying ${failedRooms.length} room(s) that failed initial classification`);
+          // Retry rooms that were skipped before the template was established
+          // Delay gives the gateway time to recover after intensive discovery
+          if (template && skippedBeforeTemplate.length > 0) {
+            log(`Retrying ${skippedBeforeTemplate.length} room(s) skipped before template`);
             await new Promise(resolve => setTimeout(resolve, 3000));
-            for (const roomMi of failedRooms) {
-              const room = await classifyRoom(client, roomMi, log);
+            for (const roomMi of skippedBeforeTemplate) {
+              const room = await classifyRoomByTemplate(client, roomMi, template, log);
               if (room) result.rooms.push(room);
             }
           }
