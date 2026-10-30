@@ -35,5 +35,9 @@
   },
   "1.1.6": {
     "en": "Revert to v1.1.4 discovery logic"
+  },
+  "1.1.7": {
+    "en": "Maintenance update",
+    "de": "Wartungsupdate"
   }
 }
